@@ -95,15 +95,15 @@ export function FontPicker({ currentFont, onPick }: Props) {
     if (kind === 'google' || kind === 'google-hebrew') {
       ensureGoogleFontLoaded(family, weights);
     }
-    // For local Hebrew fonts: the display name often differs from the
-    // file's internal family name (e.g. "PT Frank" → "PFT_Frank"). Send
-    // the real family name to Collabora; the picker still labels it
-    // by the human-friendly name.
+    // Map the display name to the file's real internal family for local
+    // Hebrew fonts (e.g. 'PT Frank' → 'PFT_Frank'). Apply for both
+    // 'local-hebrew' AND 'recent' clicks (recents store the display name).
     let actualFamily = family;
-    if (kind === 'local-hebrew') {
-      const file = HEBREW_FONTS.find((f) => f.name === family)?.file;
-      if (file && HEBREW_FONT_FILE_TO_FAMILY[file]) {
-        actualFamily = HEBREW_FONT_FILE_TO_FAMILY[file];
+    if (kind === 'local-hebrew' || kind === 'recent') {
+      const entry = HEBREW_FONTS.find((f) => f.name === family);
+      if (entry) {
+        const mapped = HEBREW_FONT_FILE_TO_FAMILY[entry.file];
+        if (mapped) actualFamily = mapped;
       }
     }
     onPick(actualFamily);

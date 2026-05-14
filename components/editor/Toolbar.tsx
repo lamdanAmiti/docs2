@@ -14,7 +14,10 @@ import { clsx } from 'clsx';
 import { FontPicker } from './FontPicker';
 import type { CollaboraCommands, ActiveState } from '@/lib/collabora-commands';
 
-const FONT_SIZES = ['8','9','10','11','12','13','14','16','18','20','24','30','36','48','60','72','96'];
+const FONT_SIZES = [
+  '6','7','8','9','10','10.5','11','12','13','14','15','16','18','20','22','24','26','28',
+  '30','32','36','40','44','48','54','60','66','72','80','88','96','108','120','144','168','192','218',
+];
 const PALETTE = [
   '#000000','#5f6368','#9aa0a6','#dadce0','#ffffff',
   '#d93025','#e8710a','#f29900','#188038','#1a73e8',
@@ -342,10 +345,14 @@ function BlockTypeSelect({ commands, current }: { commands: CollaboraCommands; c
 
 /* ─── FontSizeControl ─────────────────────────────────────────────────── */
 function FontSizeControl({ value, onSet }: { value: string; onSet: (n: number) => void }) {
-  const numeric = parseInt(value, 10) || 11;
-  const set = (n: number) => onSet(Math.max(6, Math.min(120, n)));
+  const numeric = parseFloat(value) || 11;
+  const set = (n: number) => onSet(Math.max(1, Math.min(999, n)));
   const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(String(numeric));
   const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => { setDraft(String(numeric)); }, [numeric]);
 
   useEffect(() => {
     if (!open) return;
@@ -354,19 +361,76 @@ function FontSizeControl({ value, onSet }: { value: string; onSet: (n: number) =
     return () => window.removeEventListener('mousedown', onClick);
   }, [open]);
 
+  function commit() {
+    setEditing(false);
+    const n = parseFloat(draft);
+    if (Number.isFinite(n) && n > 0) set(n);
+    else setDraft(String(numeric));
+  }
+
   return (
     <div ref={ref} className="relative flex items-center">
-      <button className="tb-btn w-6" onMouseDown={(e) => { e.preventDefault(); set(numeric - 1); }} title="Decrease font size">−</button>
-      <button type="button" onMouseDown={(e) => { e.preventDefault(); setOpen((o) => !o); }} className="tb-btn min-w-[40px] justify-center" title="Font size">{numeric}</button>
-      <button className="tb-btn w-6" onMouseDown={(e) => { e.preventDefault(); set(numeric + 1); }} title="Increase font size">+</button>
+      <button
+        className="tb-btn w-6"
+        onMouseDown={(e) => { e.preventDefault(); set(numeric - 1); }}
+        title="Decrease font size"
+      >−</button>
+
+      {editing ? (
+        <input
+          autoFocus
+          type="number"
+          min={1}
+          max={999}
+          step={1}
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={commit}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') commit();
+            if (e.key === 'Escape') { setDraft(String(numeric)); setEditing(false); }
+          }}
+          className="h-8 min-w-[52px] w-[52px] text-center text-sm border border-velr-accent rounded-md outline-none"
+        />
+      ) : (
+        <button
+          type="button"
+          onClick={() => setEditing(true)}
+          onMouseDown={(e) => { if (e.detail === 2) { e.preventDefault(); setOpen(false); setEditing(true); } }}
+          onContextMenu={(e) => { e.preventDefault(); setOpen((o) => !o); }}
+          className="tb-btn min-w-[52px] w-[52px] justify-center"
+          title="Click to edit; right-click for presets"
+        >
+          {numeric}
+        </button>
+      )}
+
+      <button
+        className="tb-btn w-6"
+        onMouseDown={(e) => { e.preventDefault(); set(numeric + 1); }}
+        title="Increase font size"
+      >+</button>
+
+      <button
+        type="button"
+        onMouseDown={(e) => { e.preventDefault(); setOpen((o) => !o); }}
+        className="tb-btn px-1"
+        title="Font size presets"
+      >
+        <ChevronDown className="w-3 h-3 opacity-60" />
+      </button>
+
       {open && (
-        <div className="absolute left-0 top-full mt-1 z-50 w-[60px] max-h-[200px] overflow-y-auto bg-white border border-velr-rule rounded-lg shadow-lg py-1">
+        <div className="absolute left-0 top-full mt-1 z-50 w-[80px] max-h-[300px] overflow-y-auto bg-white border border-velr-rule rounded-lg shadow-lg py-1">
           {FONT_SIZES.map((s) => (
             <button
               key={s}
               type="button"
-              onMouseDown={(e) => { e.preventDefault(); set(parseInt(s, 10)); setOpen(false); }}
-              className={clsx('w-full text-left px-2 py-0.5 text-sm hover:bg-gray-50', `${numeric}` === s && 'bg-velr-chip text-velr-chip-text')}
+              onMouseDown={(e) => { e.preventDefault(); set(parseFloat(s)); setOpen(false); }}
+              className={clsx(
+                'w-full text-left px-2 py-0.5 text-sm hover:bg-gray-50',
+                Math.abs(parseFloat(s) - numeric) < 0.01 && 'bg-velr-chip text-velr-chip-text',
+              )}
             >
               {s}
             </button>
