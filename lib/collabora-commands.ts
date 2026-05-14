@@ -96,12 +96,13 @@ export interface CollaboraCommands {
 }
 
 /* ─── CSS we inject into the iframe to strip Collabora chrome ─────────────
-   Whitelist approach: hide every body child EXCEPT the map (document
-   canvas) and necessary support elements (dialogs, context menus). Far
-   more reliable than trying to enumerate every chrome class — works even
-   for elements Collabora adds at runtime. */
+   Surgical: ONLY hide the obvious chrome (toolbars, menubar, titlebar,
+   sidebar). Leave everything that could carry selection handles, drag
+   markers, context menus, or hit-test geometry untouched. Don't override
+   positioning of #map / #document-container — Collabora's selection
+   overlays calculate themselves relative to those, and reflowing them
+   moves selection markers off the visible doc. */
 const STRIPPED_CHROME_CSS = `
-  /* 1. Hide the major chrome surfaces explicitly. */
   #toolbar-wrapper,
   #toolbar-row,
   #toolbar-up,
@@ -111,12 +112,10 @@ const STRIPPED_CHROME_CSS = `
   #toolbar-search,
   #toolbar-logo,
   #document-titlebar,
-  #document-name-input,
   #document-name-input-loading-bar,
   #main-menu,
   .main-nav,
   .menubar, .menubar-shell,
-  .cool-toolbar,
   .notebookbar-shortcuts-bar,
   .notebookbar-tabs-container,
   .notebookbar,
@@ -127,67 +126,21 @@ const STRIPPED_CHROME_CSS = `
   #formulabar, #formulabar-row,
   #tb_editbar,
   #mobile-edit-button,
-  #sidebar-dock-wrapper,
-  #navigator-dock-wrapper,
-  #quickfind-dock-wrapper,
   #userListHeader,
   #userListSummary,
   #followingChip,
   #sidebar-panel,
   .sidebar-panel,
-  #navigator-panel,
-  #quickfind-panel { display: none !important; }
+  #sidebar-dock-wrapper { display: none !important; }
 
-  /* When body has .velr-show-sidebar, reveal the properties sidebar */
+  /* Sidebar reveal on demand */
   body.velr-show-sidebar #sidebar-panel,
   body.velr-show-sidebar .sidebar-panel,
   body.velr-show-sidebar #sidebar-dock-wrapper {
     display: block !important;
-    position: fixed !important;
-    right: 0 !important; top: 0 !important; bottom: 0 !important;
-    width: 320px !important;
-    z-index: 50 !important;
-    background: #ffffff !important;
-    border-left: 1px solid #c6c6c6 !important;
-    overflow-y: auto !important;
-  }
-  body.velr-show-sidebar #main-document-content,
-  body.velr-show-sidebar #document-container,
-  body.velr-show-sidebar #map {
-    right: 320px !important;
-    width: calc(100% - 320px) !important;
   }
 
-  /* 2. Make the document area fill the iframe completely. */
-  html, body {
-    margin: 0 !important;
-    padding: 0 !important;
-    height: 100% !important;
-    width: 100% !important;
-    overflow: hidden !important;
-    background: #f8fafe !important;
-  }
-  #main-document-content,
-  #document-container {
-    position: absolute !important;
-    inset: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
-  }
-  #map, .leaflet-container, .canvas-container {
-    width: 100% !important;
-    height: 100% !important;
-    top: 0 !important;
-    background: #f8fafe !important;
-  }
-
-  /* 3. Keep dialogs / context menus visible (they overlay the doc). */
-  .jsdialog, .lokdialog, .context-menu, #mobile-wizard {
-    z-index: 100000 !important;
-  }
+  html, body { background: #f8fafe; }
 `;
 
 interface CollaboraGlobals {
@@ -342,15 +295,21 @@ function buildCommands(getIframe: () => HTMLIFrameElement | null): CollaboraComm
       }
     },
     insertTextBox: () => {
-      // Insert a default-sized text frame at the caret instead of putting
-      // the user in invisible drag-to-draw mode. Collabora's
-      // .uno:InsertFrame with Cols=1 + size args places a frame they can
-      // then click on directly.
-      direct('.uno:InsertFrame', {
-        Columns: { type: 'long', value: 1 },
-      });
+      // Put Collabora in "draw a text frame" mode and focus the iframe so
+      // the user's next mouse-down lands on the canvas (not still in our
+      // toolbar). They'll see Collabora's normal crosshair cursor on the
+      // page.
+      direct('.uno:InsertFrameInteract');
+      const iframe = getIframe();
+      iframe?.focus();
+      try { (iframe?.contentWindow as any)?.focus(); } catch {}
     },
-    insertVerticalTextBox: () => direct('.uno:VerticalTextFrameInteract'),
+    insertVerticalTextBox: () => {
+      direct('.uno:VerticalTextFrameInteract');
+      const iframe = getIframe();
+      iframe?.focus();
+      try { (iframe?.contentWindow as any)?.focus(); } catch {}
+    },
     uno: (command, args) => direct(command, args),
   };
 }
@@ -461,17 +420,13 @@ export function useCollaboraCommands(iframeRef: React.RefObject<HTMLIFrameElemen
      *  setting display:none directly. Beats any inline style Collabora adds.
      *  We re-run whenever the DOM changes (MutationObserver below) because
      *  Collabora re-creates several of these elements after we hide them. */
+    // Surgical: chrome-only. Anything that COULD carry selection handles,
+    // drag markers, or interactive overlays stays out of this list so it
+    // can render naturally on top of the document.
     const FORCE_HIDE = [
+      '#toolbar-wrapper', '#toolbar-row', '#toolbar-up', '#toolbar-down',
+      '#document-titlebar', '#main-menu', '.main-nav',
       '#sidebar-panel', '.sidebar-panel', '#sidebar-dock-wrapper',
-      '#sidebar-container', '#PropertyDeck',
-      '#navigator-panel', '#navigator-dock-wrapper',
-      '#quickfind-panel', '#quickfind-dock-wrapper',
-      '#toolbar-wrapper', '#document-titlebar', '#main-menu', '.main-nav',
-      '#toolbar-up', '#toolbar-down', '#toolbar-row', '#toolbar-search',
-      '#formulabar', '#formulabar-row', '#tb_editbar',
-      '#presentation-toolbar', '#spreadsheet-toolbar',
-      '#presentation-controls-wrapper', '#mobile-edit-button',
-      '#userListHeader', '#userListSummary', '#followingChip',
     ];
     function hideAll(doc: Document, showSidebar: boolean) {
       for (const sel of FORCE_HIDE) {
