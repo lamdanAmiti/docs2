@@ -12,7 +12,9 @@ services:
       - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
       - SESSION_SECRET=${SESSION_SECRET}
       - NEXT_PUBLIC_APP_URL=https://docs.velr.app
-      - NEXT_PUBLIC_COLLABORA_URL=https://docsapi.velr.app
+      # Same-origin path: editor served from docs.velr.app/{cool,browser,...}.
+      # docsapi.velr.app is kept only for the admin console.
+      - NEXT_PUBLIC_COLLABORA_URL=https://docs.velr.app
     # Fonts are bundled in the Docker image via public/fonts/* — Next.js
     # serves them at /fonts/hebrew/* and /fonts/english/*.
     labels:
@@ -37,10 +39,14 @@ services:
     cap_add:
       - MKNOD
     environment:
-      # Allow our app at docs.velr.app to embed Collabora.
-      # NOTE: aliasgroup uses regex; dots escaped with single backslash.
+      # Same-origin setup: Collabora's WOPI calls and iframe content are
+      # served through docs.velr.app/{cool,browser,hosting,...} so the
+      # browser treats parent + iframe as same origin. This is the only
+      # reliable way to defeat Chrome's clipboard partitioning when the
+      # editor is iframed — without it, copy-from-doc never reaches the
+      # OS clipboard.
       - aliasgroup1=https://docs\.velr\.app:443
-      - server_name=docsapi.velr.app
+      - server_name=docs.velr.app
       - username=${COLLABORA_ADMIN_USER}
       - password=${COLLABORA_ADMIN_PASSWORD}
       - dictionaries=en_US
@@ -51,19 +57,24 @@ services:
     # jails see them) — no runtime bind-mount needed.
     labels:
       - "traefik.enable=true"
+      # --- Same-origin routes on docs.velr.app (what the editor uses) ---
+      # Higher priority than the catch-all Next.js route so these path
+      # prefixes go to Collabora instead of the app.
+      - "traefik.http.routers.collabora-same-origin.rule=Host(`docs.velr.app`) && (PathPrefix(`/cool`) || PathPrefix(`/browser`) || PathPrefix(`/hosting`) || PathPrefix(`/lool`))"
+      - "traefik.http.routers.collabora-same-origin.entrypoints=https"
+      - "traefik.http.routers.collabora-same-origin.tls=true"
+      - "traefik.http.routers.collabora-same-origin.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.collabora-same-origin.priority=100"
+      - "traefik.http.routers.collabora-same-origin.service=collabora-svc"
+      # --- Legacy docsapi.velr.app — kept for the admin console only ---
       - "traefik.http.routers.docsapi.rule=Host(`docsapi.velr.app`)"
       - "traefik.http.routers.docsapi.entrypoints=https"
       - "traefik.http.routers.docsapi.tls=true"
       - "traefik.http.routers.docsapi.tls.certresolver=letsencrypt"
-      - "traefik.http.services.docsapi.loadbalancer.server.port=9980"
+      - "traefik.http.routers.docsapi.service=collabora-svc"
+      # Service definition (both routers share it)
+      - "traefik.http.services.collabora-svc.loadbalancer.server.port=9980"
       - "traefik.docker.network=coolify"
-      # Allow Collabora itself to write to / read from the system clipboard
-      # when embedded in an iframe at docs.velr.app. Without these headers
-      # on the iframe origin, Chrome blocks Collabora's navigator.clipboard
-      # calls — so Ctrl+C inside a doc never lands in the OS clipboard and
-      # paste anywhere else gets nothing.
-      - "traefik.http.middlewares.collabora-clipboard.headers.customresponseheaders.Permissions-Policy=clipboard-read=(self \"https://docs.velr.app\"), clipboard-write=(self \"https://docs.velr.app\")"
-      - "traefik.http.routers.docsapi.middlewares=collabora-clipboard@docker"
     networks:
       - coolify
 
