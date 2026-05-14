@@ -151,7 +151,28 @@ const STRIPPED_CHROME_CSS = `
   #feedback-link,
   #feedback-button,
   .feedback-link,
-  a[href*="feedback"][href*="collabora"] { display: none !important; }
+  a[href*="feedback"][href*="collabora"],
+  /* Floating selection toolbar — appears when text is selected, contains
+     font/size/bold/etc shortcuts. Naming differs across versions, so we
+     cover everything plausible. We're already exposing all the same
+     controls in the top toolbar, so this is pure duplication on the
+     canvas. */
+  .editor-toolbox,
+  .editor-toolbox-popup,
+  .editor-context-toolbar,
+  .selection-toolbar,
+  .text-selection-toolbar,
+  .cool-mini-toolbar,
+  .mini-toolbar,
+  .floating-toolbar,
+  .lokdialog_container.modalpopup,
+  .lokdialog-floating,
+  .context-toolbar,
+  #copy-paste-container,
+  #format-popup,
+  #formattingpopupmenu,
+  .action-button-bubble,
+  .selection-popup { display: none !important; }
 
   /* Sidebar reveal on demand */
   body.velr-show-sidebar #sidebar-panel,
@@ -481,21 +502,40 @@ export function useCollaboraCommands(iframeRef: React.RefObject<HTMLIFrameElemen
       }
     }
 
-    // Collabora occasionally injects a "Please send us your feedback" banner
-    // at the bottom of the canvas — there's no stable id/class for it across
-    // versions, so we sweep periodically and remove any element whose text
-    // content matches the message. Cheap (runs every 2s, walks ~50 nodes).
+    // Two things to keep clean (no stable selectors across Collabora
+    // versions, so we sweep):
+    //   (1) "Please send us your feedback" banner
+    //   (2) The floating selection mini-toolbar — appears when text is
+    //       selected, duplicates controls we already have in the top bar.
+    //       Detect it heuristically: a positioned popup that contains a
+    //       Bold or Italic button.
     const FEEDBACK_RE = /please\s+send\s+(us\s+)?(your\s+)?feedback/i;
     function sweepFeedback() {
       const doc = iframe?.contentDocument;
       if (!doc?.body) return;
-      // Only check the floating overlays — Leaflet popups, toasts, dialogs.
-      const candidates = doc.querySelectorAll<HTMLElement>(
+
+      // (1) feedback overlays
+      const feedbackTargets = doc.querySelectorAll<HTMLElement>(
         '.leaflet-popup, .toast, .notification, .vex, .vex-overlay, .modal, .feedback, .feedback-popup, .feedback-banner, [class*="feedback"]'
       );
-      candidates.forEach((el) => {
+      feedbackTargets.forEach((el) => {
         const t = el.textContent ?? '';
         if (FEEDBACK_RE.test(t)) el.remove();
+      });
+
+      // (2) selection mini-toolbar
+      const formattingPopups = doc.querySelectorAll<HTMLElement>(
+        '.leaflet-popup, .lokdialog, .lokdialog_container, [class*="popup"], [class*="toolbox"], [class*="toolbar"][class*="float"], [class*="context-menu"]'
+      );
+      formattingPopups.forEach((el) => {
+        // If this overlay contains a Bold OR Italic OR Font button it's
+        // the formatting mini-toolbar — kill it. The top toolbar lives in
+        // the parent document, not the iframe, so we won't kill our own
+        // controls.
+        const hasFormat = el.querySelector(
+          '[title*="Bold" i], [aria-label*="Bold" i], [title*="Italic" i], [aria-label*="Italic" i], [title*="Font" i], [aria-label*="Font" i]'
+        );
+        if (hasFormat) el.remove();
       });
     }
 
@@ -527,7 +567,27 @@ export function useCollaboraCommands(iframeRef: React.RefObject<HTMLIFrameElemen
     iframe.addEventListener('load', tryWire);
     tryWire(); // also try immediately in case it's already loaded
 
-    const sweepHandle = window.setInterval(sweepFeedback, 2000);
+    // Periodic safety sweep + immediate sweep on selection/mouseup so the
+    // formatting popup doesn't flash visible before disappearing.
+    const sweepHandle = window.setInterval(sweepFeedback, 1500);
+    function attachSelectionSweep() {
+      const doc = iframe?.contentDocument;
+      if (!doc) return;
+      const fire = () => requestAnimationFrame(sweepFeedback);
+      doc.addEventListener('selectionchange', fire, true);
+      doc.addEventListener('mouseup', fire, true);
+      doc.addEventListener('keyup', fire, true);
+    }
+    // Re-attach whenever the iframe doc swaps (Collabora reloads it). The
+    // poll loop above already runs tryWire periodically — piggyback on it.
+    const origTryWire = tryWire;
+    function wrappedTryWire() {
+      origTryWire();
+      attachSelectionSweep();
+    }
+    iframe.removeEventListener('load', tryWire);
+    iframe.addEventListener('load', wrappedTryWire);
+    wrappedTryWire();
 
     // Forward keyboard shortcuts to Collabora — captures in BOTH the parent
     // window (when focus is in our toolbar/menubar) AND the iframe document
