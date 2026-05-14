@@ -71,10 +71,10 @@ export async function writeDocBytes(storagePath: string, bytes: Uint8Array) {
  */
 const LOCK_TTL_MS = 30 * 60 * 1000;
 
-export async function getLock(documentId: string): Promise<{ lock_value: string } | null> {
+export async function getLock(documentId: string): Promise<{ lock_value: string; user_id: string } | null> {
   await db.from('locks').delete().lt('expires_at', new Date().toISOString());
   const { data } = await db
-    .from('locks').select('lock_value').eq('document_id', documentId).maybeSingle();
+    .from('locks').select('lock_value, user_id').eq('document_id', documentId).maybeSingle();
   return data ?? null;
 }
 

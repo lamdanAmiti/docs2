@@ -65,7 +65,19 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   switch (override) {
     case 'LOCK': {
       if (info.permission !== 'write') return lockFail(401);
-      if (current && current.lock_value !== reqLock) return lockMismatch(current.lock_value);
+      // Same lock value → refresh is fine.
+      if (current && current.lock_value === reqLock) {
+        await refreshLock(id);
+        return new NextResponse(null, { status: 200 });
+      }
+      // Stale lock from a prior session of the SAME user (browser close,
+      // network drop, Collabora missed the Unlock) — let the new session
+      // take over instead of returning 409 and forcing read-only.
+      if (current && current.user_id === info.user.id) {
+        await releaseLock(id);
+      } else if (current) {
+        return lockMismatch(current.lock_value);
+      }
       await acquireLock(id, info.user.id, reqLock);
       return new NextResponse(null, { status: 200 });
     }

@@ -23,8 +23,9 @@ COPY public/fonts/english/ /usr/share/fonts/truetype/velr-english/
 COPY public/fonts/hebrew/  /opt/cool/systemplate/usr/share/fonts/truetype/velr-hebrew/
 COPY public/fonts/english/ /opt/cool/systemplate/usr/share/fonts/truetype/velr-english/
 
-# 3. Velr CSS overrides — inject after bundle.css so they cascade-win.
+# 3. Velr CSS overrides + Instrument Sans (UI font). Inject after bundle.css.
 COPY public/collabora-theme/velr-overrides.css /usr/share/coolwsd/browser/dist/velr-overrides.css
+COPY public/collabora-theme/fonts/ /usr/share/coolwsd/browser/dist/fonts/
 RUN sed -i 's|<link rel="stylesheet" href="%SERVICE_ROOT%/browser/%VERSION%/bundle.css" />|<link rel="stylesheet" href="%SERVICE_ROOT%/browser/%VERSION%/bundle.css" />\n<link rel="stylesheet" href="%SERVICE_ROOT%/browser/%VERSION%/velr-overrides.css" />|' \
         /usr/share/coolwsd/browser/dist/cool.html
 

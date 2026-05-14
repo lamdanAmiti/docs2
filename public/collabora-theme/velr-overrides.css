@@ -59,7 +59,30 @@
   --color-hyperlink:          var(--velr-accent);
 }
 
-/* ─── Typography — Inter for all UI text ────────────────────────────────── */
+/* ─── Typography — Instrument Sans for all UI chrome ────────────────────── */
+/* Self-host the font so we don't depend on the parent page's loader.
+   The TTFs are baked into the image alongside the english fonts. */
+@font-face {
+  font-family: 'Instrument Sans';
+  src: url('/browser/dist/fonts/instrument-sans-400.ttf') format('truetype');
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Instrument Sans';
+  src: url('/browser/dist/fonts/instrument-sans-500.ttf') format('truetype');
+  font-weight: 500; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Instrument Sans';
+  src: url('/browser/dist/fonts/instrument-sans-600.ttf') format('truetype');
+  font-weight: 600; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Instrument Sans';
+  src: url('/browser/dist/fonts/instrument-sans-700.ttf') format('truetype');
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+
 body,
 .notebookbar-tabs-container,
 .w2ui-tb-text,
@@ -74,9 +97,11 @@ body,
 .toolbar-input,
 .menubar,
 .menubar-shell,
-button {
+button,
+input,
+select {
   font-family:
-    'Inter',
+    'Instrument Sans',
     -apple-system, BlinkMacSystemFont,
     'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
   -webkit-font-smoothing: antialiased;
