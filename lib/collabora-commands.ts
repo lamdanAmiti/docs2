@@ -131,7 +131,18 @@ const STRIPPED_CHROME_CSS = `
   #followingChip,
   #sidebar-panel,
   .sidebar-panel,
-  #sidebar-dock-wrapper { display: none !important; }
+  #sidebar-dock-wrapper,
+  /* Collabora's first-run "Welcome" carousel (Welcome / Next / X). The
+     server-side --o:welcome.enable=false flag is unreliable across versions;
+     this kills the overlay regardless. */
+  #iframe-welcome,
+  #welcome-iframe,
+  #iframe-welcome-box,
+  #welcome-modal,
+  #welcome,
+  .iframe-welcome-modal,
+  .welcome-modal,
+  .welcome-overlay { display: none !important; }
 
   /* Sidebar reveal on demand */
   body.velr-show-sidebar #sidebar-panel,
