@@ -142,7 +142,12 @@ const STRIPPED_CHROME_CSS = `
   #welcome,
   .iframe-welcome-modal,
   .welcome-modal,
-  .welcome-overlay { display: none !important; }
+  .welcome-overlay,
+  /* "Send Feedback" link Collabora injects on the canvas */
+  #feedback-link,
+  #feedback-button,
+  .feedback-link,
+  a[href*="feedback"][href*="collabora"] { display: none !important; }
 
   /* Sidebar reveal on demand */
   body.velr-show-sidebar #sidebar-panel,
