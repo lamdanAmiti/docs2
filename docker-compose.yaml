@@ -31,7 +31,9 @@ services:
 
   # ─── Collabora Online (rebranded "Velr Docs" backend) — docsapi.velr.app ─
   collabora:
-    image: collabora/code:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.collabora
     container_name: docsapi-collabora
     restart: unless-stopped
     cap_add:
