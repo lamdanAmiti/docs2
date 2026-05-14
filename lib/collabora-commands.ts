@@ -3,14 +3,22 @@
 import { useEffect, useRef, useState } from 'react';
 
 /**
- * Bridge between the Tiptap-style toolbar/menubar UI components and the
- * Collabora editor inside the iframe. Sends UNO commands over postMessage
- * and tracks the "active" state of selection-bound commands so the toolbar
- * can highlight Bold/Italic/etc when the cursor is in a formatted region.
+ * Direct bridge into the Collabora iframe.
  *
- * Collabora's PostMessage API:
- *   parent → iframe: { MessageId: 'Send_UNO_Command', SendTime, Values: { Command: '.uno:Bold' } }
- *   iframe → parent: { MessageId: 'Action_State_Set', Values: { type: 'commandStateChanged', state: { '.uno:Bold': 'true' } } }
+ * Because docs.velr.app and the Collabora endpoint are now the same origin,
+ * the parent can directly access the iframe's window/document — no
+ * postMessage hop needed. We:
+ *   1. Wait for window.app.map to exist on the iframe.
+ *   2. Call app.map.sendUnoCommand(...) for every toolbar command.
+ *   3. Subscribe to app.map.on('commandstatechanged', ...) to track which
+ *      formatting marks are active under the cursor so the toolbar can
+ *      highlight them.
+ *   4. Inject a <style> tag into the iframe's <head> that strips out
+ *      every Collabora chrome surface (notebookbar, menubar, toolbars,
+ *      sidebars, status bar) so the only thing left is the document canvas.
+ *
+ * If for some reason the direct API isn't available (origin mismatch,
+ * sandbox), we silently fall back to postMessage and log a warning.
  */
 
 export interface ActiveState {
@@ -44,117 +52,193 @@ const ALIGN_UNO: Record<'left' | 'center' | 'right' | 'justify', string> = {
 };
 
 export interface CollaboraCommands {
-  // Selection-bound formatting
   bold:        () => void;
   italic:      () => void;
   underline:   () => void;
   strike:      () => void;
   subscript:   () => void;
   superscript: () => void;
-  // Alignment
   align: (which: 'left' | 'center' | 'right' | 'justify') => void;
-  // Lists / blocks
   bulletList:    () => void;
   orderedList:   () => void;
   blockquote:    () => void;
-  // History
   undo: () => void;
   redo: () => void;
-  // Selection
   selectAll: () => void;
   cut:       () => void;
   copy:      () => void;
   paste:     () => void;
-  // Insert
   pageBreak:  () => void;
   hLine:      () => void;
   insertLink: (url: string) => void;
   unsetLink:  () => void;
   insertTable: (rows: number, cols: number) => void;
-  // Text style / typography
   setFont:     (family: string) => void;
   setFontSize: (pt: number | string) => void;
   setColor:    (hex: string) => void;
   setHighlight:(hex: string) => void;
   clearFormatting: () => void;
-  // Heading
   setHeading: (level: 0 | 1 | 2 | 3 | 4 | 5 | 6) => void;
-  // Direction
   setDirection: (dir: 'ltr' | 'rtl') => void;
-  // View
-  zoomIn:    () => void;
-  zoomOut:   () => void;
-  resetZoom: () => void;
-  // Generic escape hatch
+  zoom: (pct: number) => void;
   uno: (command: string, args?: Record<string, unknown>) => void;
 }
 
-function buildCommands(getIframe: () => HTMLIFrameElement | null): CollaboraCommands {
-  function send(command: string, args?: Record<string, unknown>) {
-    const win = getIframe()?.contentWindow;
-    if (!win) return;
-    const msg = {
-      MessageId: 'Send_UNO_Command',
-      SendTime: Date.now(),
-      Values: args ? { Command: command, Args: args } : { Command: command },
-    };
-    win.postMessage(JSON.stringify(msg), '*');
+/* ─── CSS we inject into the iframe to strip Collabora chrome ───────────── */
+const STRIPPED_CHROME_CSS = `
+  /* Hide every chrome surface — only the document canvas should remain. */
+  #toolbar-wrapper,
+  #toolbar-row,
+  #toolbar-up,
+  #toolbar-down,
+  #toolbar-mobile-back,
+  #toolbar-hamburger,
+  #toolbar-search,
+  #document-titlebar,
+  #document-name-input,
+  #document-name-input-loading-bar,
+  .document-title-bar,
+  #main-menu,
+  .main-nav,
+  .menubar,
+  .menubar-shell,
+  #menu-bar-container,
+  .cool-toolbar,
+  .notebookbar-shortcuts-bar,
+  .notebookbar-tabs-container,
+  .notebookbar,
+  #NotebookBar,
+  #shortcuts-toolbar,
+  #presentation-toolbar,
+  #spreadsheet-toolbar,
+  .w2ui-toolbar,
+  #tb_editbar,
+  #mobile-edit-button,
+  .toolbar-bottom,
+  #welcome-iframe,
+  .welcome-page,
+  .leaflet-control-tabs,
+  .leaflet-control-sidebar,
+  #sidebar-dock-wrapper,
+  #sidebar-panel { display: none !important; visibility: hidden !important; }
+
+  /* Let the document canvas fill the iframe */
+  html, body, #map, #document-container, .leaflet-container, .canvas-container {
+    margin: 0 !important;
+    padding: 0 !important;
+    height: 100% !important;
+    width: 100% !important;
+    background: var(--velr-canvas, #f8fafe) !important;
   }
-  function postMsg(messageId: string, values?: Record<string, unknown>) {
+  #map { top: 0 !important; }
+`;
+
+interface CollaboraGlobals {
+  app?: {
+    map?: {
+      sendUnoCommand: (cmd: string, args?: any) => void;
+      on: (event: string, handler: (e: any) => void) => void;
+      off: (event: string, handler: (e: any) => void) => void;
+    };
+  };
+}
+
+function getCollabora(iframe: HTMLIFrameElement | null): CollaboraGlobals['app'] | null {
+  try {
+    return (iframe?.contentWindow as any)?.app ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function buildCommands(getIframe: () => HTMLIFrameElement | null): CollaboraCommands {
+  function direct(cmd: string, args?: Record<string, unknown>) {
+    const app = getCollabora(getIframe());
+    if (app?.map?.sendUnoCommand) {
+      try { app.map.sendUnoCommand(cmd, args); return; } catch (e) { console.warn('sendUnoCommand failed', e); }
+    }
+    // Fallback: postMessage
     const win = getIframe()?.contentWindow;
-    if (!win) return;
-    win.postMessage(JSON.stringify({ MessageId: messageId, SendTime: Date.now(), Values: values ?? {} }), '*');
+    if (win) {
+      win.postMessage(JSON.stringify({
+        MessageId: 'Send_UNO_Command',
+        SendTime: Date.now(),
+        Values: args ? { Command: cmd, Args: args } : { Command: cmd },
+      }), '*');
+    }
   }
 
   return {
-    bold:        () => send('.uno:Bold'),
-    italic:      () => send('.uno:Italic'),
-    underline:   () => send('.uno:Underline'),
-    strike:      () => send('.uno:Strikeout'),
-    subscript:   () => send('.uno:SubScript'),
-    superscript: () => send('.uno:SuperScript'),
-    align: (w) => send(ALIGN_UNO[w]),
-    bulletList:  () => send('.uno:DefaultBullet'),
-    orderedList: () => send('.uno:DefaultNumbering'),
-    blockquote:  () => send('.uno:ParaStyle', { 'Style': { type: 'string', value: 'Quotations' } }),
-    undo: () => send('.uno:Undo'),
-    redo: () => send('.uno:Redo'),
-    selectAll: () => send('.uno:SelectAll'),
-    cut:       () => send('.uno:Cut'),
-    copy:      () => send('.uno:Copy'),
-    paste:     () => send('.uno:Paste'),
-    pageBreak: () => send('.uno:InsertPagebreak'),
-    hLine:     () => send('.uno:InsertGraphic'), // best UNO match; user typically uses Insert→HRule
-    insertLink: (url) => send('.uno:HyperlinkDialog', { Hyperlink: { type: 'string', value: url } }),
-    unsetLink:  () => send('.uno:RemoveHyperlink'),
+    bold:        () => direct('.uno:Bold'),
+    italic:      () => direct('.uno:Italic'),
+    underline:   () => direct('.uno:Underline'),
+    strike:      () => direct('.uno:Strikeout'),
+    subscript:   () => direct('.uno:SubScript'),
+    superscript: () => direct('.uno:SuperScript'),
+    align: (w) => direct(ALIGN_UNO[w]),
+    bulletList:  () => direct('.uno:DefaultBullet'),
+    orderedList: () => direct('.uno:DefaultNumbering'),
+    blockquote:  () => direct('.uno:ParaStyle', { 'Style': { type: 'string', value: 'Quotations' } }),
+    undo: () => direct('.uno:Undo'),
+    redo: () => direct('.uno:Redo'),
+    selectAll: () => direct('.uno:SelectAll'),
+    cut:       () => direct('.uno:Cut'),
+    copy:      () => direct('.uno:Copy'),
+    paste:     () => direct('.uno:Paste'),
+    pageBreak: () => direct('.uno:InsertPagebreak'),
+    hLine:     () => direct('.uno:InsertSection'),
+    insertLink: (url) => direct('.uno:SetHyperlink', { 'Hyperlink.Text': { type: 'string', value: url }, 'Hyperlink.URL': { type: 'string', value: url } }),
+    unsetLink:  () => direct('.uno:RemoveHyperlink'),
     insertTable: (rows, cols) =>
-      send('.uno:InsertTable', {
+      direct('.uno:InsertTable', {
         Rows: { type: 'long', value: rows },
         Columns: { type: 'long', value: cols },
       }),
     setFont: (family) =>
-      send('.uno:CharFontName', { 'CharFontName.FamilyName': { type: 'string', value: family } }),
+      direct('.uno:CharFontName', { 'CharFontName.FamilyName': { type: 'string', value: family } }),
     setFontSize: (pt) =>
-      send('.uno:FontHeight', { 'FontHeight.Height': { type: 'float', value: Number(pt) } }),
+      direct('.uno:FontHeight', { 'FontHeight.Height': { type: 'float', value: Number(pt) } }),
     setColor: (hex) =>
-      send('.uno:FontColor', { 'FontColor.Color': { type: 'long', value: parseInt(hex.replace('#', ''), 16) } }),
+      direct('.uno:Color', { Color: { type: 'long', value: parseInt(hex.replace('#', ''), 16) } }),
     setHighlight: (hex) =>
-      send('.uno:BackColor', { 'BackColor.Color': { type: 'long', value: parseInt(hex.replace('#', ''), 16) } }),
-    clearFormatting: () => send('.uno:ResetAttributes'),
+      direct('.uno:BackColor', { BackColor: { type: 'long', value: parseInt(hex.replace('#', ''), 16) } }),
+    clearFormatting: () => direct('.uno:ResetAttributes'),
     setHeading: (level) =>
-      send('.uno:ParaStyle', {
+      direct('.uno:ParaStyle', {
         'Style': { type: 'string', value: level === 0 ? 'Default Paragraph Style' : `Heading ${level}` },
       }),
-    setDirection: (dir) => send(dir === 'rtl' ? '.uno:ParaRightToLeft' : '.uno:ParaLeftToRight'),
-    zoomIn:    () => postMsg('Action_ChangeUIMode', { Mode: 'classic' }) /* fallback: handled separately */,
-    zoomOut:   () => {},
-    resetZoom: () => {},
-    uno: (command, args) => send(command, args),
+    setDirection: (dir) => direct(dir === 'rtl' ? '.uno:ParaRightToLeft' : '.uno:ParaLeftToRight'),
+    zoom: (pct) => direct('.uno:Zoom', { Zoom: { type: 'long', value: pct } }),
+    uno: (command, args) => direct(command, args),
   };
 }
 
+const STATE_MAPPING: Record<string, keyof ActiveState> = {
+  'Bold':            'bold',
+  'Italic':          'italic',
+  'Underline':       'underline',
+  'Strikeout':       'strike',
+  'SubScript':       'subscript',
+  'SuperScript':     'superscript',
+  'LeftPara':        'alignLeft',
+  'CenterPara':      'alignCenter',
+  'RightPara':       'alignRight',
+  'JustifyPara':     'alignJustify',
+  'DefaultBullet':   'bulletList',
+  'DefaultNumbering':'orderedList',
+};
+const VALUE_MAPPING: Record<string, keyof ActiveState> = {
+  'CharFontName': 'font',
+  'FontHeight':   'fontSize',
+  'Color':        'color',
+  'BackColor':    'highlight',
+};
+
 /**
  * React hook: returns commands + the latest active state from Collabora.
+ * Waits for the iframe's Collabora globals to appear, then subscribes to
+ * commandstatechanged events. Also injects our chrome-hiding CSS into the
+ * iframe's document.head so users only see the document canvas.
  */
 export function useCollaboraCommands(iframeRef: React.RefObject<HTMLIFrameElement | null>) {
   const [active, setActive] = useState<ActiveState>({});
@@ -165,70 +249,70 @@ export function useCollaboraCommands(iframeRef: React.RefObject<HTMLIFrameElemen
   }
 
   useEffect(() => {
-    function onMessage(ev: MessageEvent) {
-      if (!ev.data || typeof ev.data !== 'string') return;
-      let parsed: any;
-      try { parsed = JSON.parse(ev.data); } catch { return; }
+    const iframe = iframeRef.current;
+    if (!iframe) return;
 
-      // Collabora emits various message ids; we care about state updates.
-      if (parsed.MessageId === 'Action_StateChanged' || parsed.MessageId === 'CommandStateChanged') {
-        applyState(parsed.Values ?? parsed, setActive);
-      } else if (parsed.MessageId === 'App_LoadingStatus' && parsed.Values?.Status === 'Document_Loaded') {
-        // ask Collabora to start sending us state updates
-        const win = iframeRef.current?.contentWindow;
-        win?.postMessage(JSON.stringify({
-          MessageId: 'Host_PostmessageReady', SendTime: Date.now(), Values: {},
-        }), '*');
+    let pollHandle: number | null = null;
+    let mounted = true;
+    let unsubscribe: (() => void) | null = null;
+
+    function onStateChanged(e: any) {
+      if (!e?.commandName) return;
+      const cmd = String(e.commandName).replace(/^\.uno:/, '');
+      const state = String(e.state ?? '');
+
+      const boolKey = STATE_MAPPING[cmd];
+      if (boolKey) {
+        setActive((prev) => ({ ...prev, [boolKey]: state === 'true' }));
+        return;
       }
+      const valKey = VALUE_MAPPING[cmd];
+      if (valKey) {
+        setActive((prev) => ({ ...prev, [valKey]: state }));
+        return;
+      }
+      if (cmd === 'Undo') setActive((p) => ({ ...p, canUndo: state === 'enabled' }));
+      if (cmd === 'Redo') setActive((p) => ({ ...p, canRedo: state === 'enabled' }));
     }
 
-    window.addEventListener('message', onMessage);
-    return () => window.removeEventListener('message', onMessage);
+    function injectStyle(doc: Document) {
+      if (doc.getElementById('velr-chrome-strip')) return;
+      const style = doc.createElement('style');
+      style.id = 'velr-chrome-strip';
+      style.textContent = STRIPPED_CHROME_CSS;
+      (doc.head ?? doc.documentElement).appendChild(style);
+    }
+
+    function tryWire() {
+      if (!mounted || !iframe) return;
+      const win = iframe.contentWindow as any;
+      try {
+        // Inject CSS as early as the iframe document exists, even before
+        // Collabora has booted.
+        if (iframe.contentDocument) injectStyle(iframe.contentDocument);
+      } catch {}
+      const app = win?.app;
+      const map = app?.map;
+      if (map && typeof map.on === 'function' && typeof map.sendUnoCommand === 'function') {
+        map.on('commandstatechanged', onStateChanged);
+        unsubscribe = () => { try { map.off('commandstatechanged', onStateChanged); } catch {} };
+        if (pollHandle != null) { clearInterval(pollHandle); pollHandle = null; }
+        return;
+      }
+      // Not ready yet — poll briefly.
+      if (pollHandle == null) pollHandle = window.setInterval(tryWire, 300) as unknown as number;
+    }
+
+    iframe.addEventListener('load', tryWire);
+    tryWire(); // also try immediately in case it's already loaded
+
+    return () => {
+      mounted = false;
+      iframe.removeEventListener('load', tryWire);
+      if (pollHandle != null) clearInterval(pollHandle);
+      if (unsubscribe) unsubscribe();
+    };
   }, [iframeRef]);
 
   return { commands: commandsRef.current!, active };
-}
-
-function applyState(values: any, setActive: (s: (prev: ActiveState) => ActiveState) => void) {
-  // Values shapes seen in Collabora: { commandName: 'Bold', state: 'true' } OR
-  // { type: 'commandStateChanged', state: { '.uno:Bold': 'true' } }
-  const updates: Partial<ActiveState> = {};
-
-  const setBool = (k: keyof ActiveState, v: string) => {
-    (updates as any)[k] = v === 'true';
-  };
-
-  function digest(cmd: string, state: string) {
-    const c = cmd.replace(/^\.uno:/, '');
-    switch (c) {
-      case 'Bold':        setBool('bold', state); break;
-      case 'Italic':      setBool('italic', state); break;
-      case 'Underline':   setBool('underline', state); break;
-      case 'Strikeout':   setBool('strike', state); break;
-      case 'SubScript':   setBool('subscript', state); break;
-      case 'SuperScript': setBool('superscript', state); break;
-      case 'LeftPara':    setBool('alignLeft', state); break;
-      case 'CenterPara':  setBool('alignCenter', state); break;
-      case 'RightPara':   setBool('alignRight', state); break;
-      case 'JustifyPara': setBool('alignJustify', state); break;
-      case 'DefaultBullet':    setBool('bulletList', state); break;
-      case 'DefaultNumbering': setBool('orderedList', state); break;
-      case 'Undo':        setBool('canUndo', state); break;
-      case 'Redo':        setBool('canRedo', state); break;
-      case 'CharFontName': updates.font = String(state); break;
-      case 'FontHeight':   updates.fontSize = String(state); break;
-      case 'FontColor':    updates.color = state; break;
-      case 'BackColor':    updates.highlight = state; break;
-    }
-  }
-
-  if (values?.commandName) {
-    digest(values.commandName, String(values.state));
-  }
-  if (values?.state && typeof values.state === 'object') {
-    for (const [k, v] of Object.entries(values.state)) digest(k, String(v));
-  }
-
-  if (Object.keys(updates).length === 0) return;
-  setActive((prev) => ({ ...prev, ...updates }));
 }
