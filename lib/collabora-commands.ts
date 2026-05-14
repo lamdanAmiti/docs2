@@ -420,18 +420,19 @@ export function useCollaboraCommands(iframeRef: React.RefObject<HTMLIFrameElemen
      *  setting display:none directly. Beats any inline style Collabora adds.
      *  We re-run whenever the DOM changes (MutationObserver below) because
      *  Collabora re-creates several of these elements after we hide them. */
-    // Surgical: chrome-only. Anything that COULD carry selection handles,
-    // drag markers, or interactive overlays stays out of this list so it
-    // can render naturally on top of the document.
+    // Chrome-only initial sweep (no MutationObserver — that was firing on
+    // every DOM change Collabora made, racing with its selection layer and
+    // breaking click-to-select on frames/images).
     const FORCE_HIDE = [
       '#toolbar-wrapper', '#toolbar-row', '#toolbar-up', '#toolbar-down',
       '#document-titlebar', '#main-menu', '.main-nav',
       '#sidebar-panel', '.sidebar-panel', '#sidebar-dock-wrapper',
     ];
-    function hideAll(doc: Document, showSidebar: boolean) {
+    function hideOnce(doc: Document) {
+      const showSidebar = doc.body?.classList.contains('velr-show-sidebar') ?? false;
       for (const sel of FORCE_HIDE) {
         doc.querySelectorAll<HTMLElement>(sel).forEach((el) => {
-          const isSidebar = el.matches('#sidebar-panel, .sidebar-panel, #sidebar-dock-wrapper, #sidebar-container, #PropertyDeck');
+          const isSidebar = el.matches('#sidebar-panel, .sidebar-panel, #sidebar-dock-wrapper');
           if (isSidebar && showSidebar) {
             el.style.removeProperty('display');
           } else {
@@ -440,30 +441,17 @@ export function useCollaboraCommands(iframeRef: React.RefObject<HTMLIFrameElemen
         });
       }
     }
-    let observer: MutationObserver | null = null;
-    let observedDoc: Document | null = null;
-    function startObserver(doc: Document) {
-      if (observer && observedDoc === doc) return;
-      observer?.disconnect();
-      observedDoc = doc;
-      const showSidebar = doc.body?.classList.contains('velr-show-sidebar') ?? false;
-      hideAll(doc, showSidebar);
-      observer = new MutationObserver(() => {
-        const s = doc.body?.classList.contains('velr-show-sidebar') ?? false;
-        hideAll(doc, s);
-      });
-      observer.observe(doc.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'class'] });
-    }
 
     function tryWire() {
       if (!mounted || !iframe) return;
       const win = iframe.contentWindow as any;
       try {
         // Inject CSS as early as the iframe document exists, even before
-        // Collabora has booted.
+        // Collabora has booted. The CSS itself (with !important) handles
+        // the chrome stripping — no MutationObserver needed.
         if (iframe.contentDocument) {
           injectStyle(iframe.contentDocument);
-          startObserver(iframe.contentDocument);
+          hideOnce(iframe.contentDocument);
           attachDocListener();
         }
       } catch {}
@@ -528,8 +516,6 @@ export function useCollaboraCommands(iframeRef: React.RefObject<HTMLIFrameElemen
       docKeyAttached?.removeEventListener('keydown', onKeyDown, true);
       if (pollHandle != null) clearInterval(pollHandle);
       if (unsubscribe) unsubscribe();
-      observer?.disconnect();
-      observer = null;
     };
   }, [iframeRef]);
 
