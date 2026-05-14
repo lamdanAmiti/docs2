@@ -13,6 +13,10 @@ services:
       - SESSION_SECRET=${SESSION_SECRET}
       - NEXT_PUBLIC_APP_URL=https://docs.velr.app
       - NEXT_PUBLIC_COLLABORA_URL=https://docsapi.velr.app
+    volumes:
+      # Hebrew fonts mounted into the public/ dir so Next.js serves them
+      # at /fonts/hebrew/*.ttf (referenced by app/hebrew-fonts.css).
+      - /var/lib/velr-docs/fonts/hebrew:/app/public/fonts/hebrew:ro
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.docs.rule=Host(`docs.velr.app`)"
@@ -43,9 +47,10 @@ services:
       - extra_params=--o:ssl.enable=false --o:ssl.termination=true --o:welcome.enable=false --o:net.proto=IPv4
       - DONT_GEN_SSL_CERT=1
     volumes:
-      # Hebrew fonts exposed to Collabora's editor font picker.
-      # Drop your .ttf/.otf files into public/fonts/hebrew/ before deploy.
-      - ./public/fonts/hebrew:/usr/share/fonts/truetype/velr-hebrew:ro
+      # Hebrew fonts exposed to Collabora's editor font picker. Same host
+      # directory is mounted into the Next.js container above so the wrapper
+      # UI and the editor share one source of truth.
+      - /var/lib/velr-docs/fonts/hebrew:/usr/share/fonts/truetype/velr-hebrew:ro
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.docsapi.rule=Host(`docsapi.velr.app`)"
