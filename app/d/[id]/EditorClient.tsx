@@ -1,10 +1,10 @@
 'use client';
 
-import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, Users } from 'lucide-react';
-import { Avatar } from '@/components/home/Avatar';
 import { ShareDialog } from '@/components/home/ShareDialog';
+import { TopBar } from '@/components/editor/TopBar';
+import { Toolbar } from '@/components/editor/Toolbar';
+import { useCollaboraCommands } from '@/lib/collabora-commands';
 
 export interface EditorClientProps {
   docId: string;
@@ -17,73 +17,46 @@ export interface EditorClientProps {
 }
 
 export function EditorClient(props: EditorClientProps) {
-  const { docId, title, iframeUrl, accessToken, accessTokenTtl, canRename, currentUser } = props;
+  const { docId, title, iframeUrl, accessToken, accessTokenTtl, canRename } = props;
   const formRef = useRef<HTMLFormElement | null>(null);
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const [showShare, setShowShare] = useState(false);
   const [docTitle, setDocTitle] = useState(title);
-  const [titleEditing, setTitleEditing] = useState(false);
-  const [draftTitle, setDraftTitle] = useState(title);
+  const [savedHint, setSavedHint] = useState('Saved');
 
-  // Auto-POST the form into the iframe on mount — this is how Collabora wants its
-  // access_token: as form-encoded POST data, not query string.
+  const { commands, active } = useCollaboraCommands(iframeRef);
+
+  // Auto-POST the form into the iframe on mount.
   useEffect(() => {
     formRef.current?.submit();
   }, []);
 
-  async function saveTitle() {
-    const t = draftTitle.trim() || 'Untitled document';
-    setTitleEditing(false);
-    if (t === docTitle) return;
-    setDocTitle(t);
+  async function saveTitle(next: string) {
+    setDocTitle(next);
+    setSavedHint('Saving…');
     await fetch(`/api/docs/${docId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title: t }),
+      body: JSON.stringify({ title: next }),
     });
+    setSavedHint('Saved');
   }
 
   return (
     <div className="flex h-screen flex-col bg-velr-canvas">
-      {/* Top bar */}
-      <header className="flex items-center gap-3 px-4 py-2.5 bg-white border-b border-velr-rule">
-        <Link href="/home" className="grid place-items-center w-9 h-9 rounded-full hover:bg-velr-surface-container">
-          <ArrowLeft className="w-5 h-5 text-velr-ink" />
-        </Link>
+      <TopBar
+        title={docTitle}
+        onRename={(t) => { if (canRename) saveTitle(t); }}
+        onShare={canRename ? () => setShowShare(true) : undefined}
+        commands={commands}
+        active={active}
+        savedHint={savedHint}
+      />
 
-        {titleEditing && canRename ? (
-          <input
-            autoFocus
-            value={draftTitle}
-            onChange={e => setDraftTitle(e.target.value)}
-            onBlur={saveTitle}
-            onKeyDown={e => { if (e.key === 'Enter') saveTitle(); if (e.key === 'Escape') { setDraftTitle(docTitle); setTitleEditing(false); } }}
-            className="flex-1 max-w-xl bg-transparent border border-velr-rule rounded-md px-2 py-1 text-[15px] focus:outline-none focus:border-velr-accent"
-          />
-        ) : (
-          <button
-            onClick={() => canRename && setTitleEditing(true)}
-            disabled={!canRename}
-            className="flex-1 max-w-xl text-left text-[15px] font-medium text-velr-ink hover:bg-velr-surface-container disabled:hover:bg-transparent disabled:cursor-default rounded-md px-2 py-1 truncate"
-          >
-            {docTitle}
-          </button>
-        )}
+      <Toolbar commands={commands} active={active} />
 
-        <div className="flex items-center gap-2 ml-auto">
-          {canRename && (
-            <button
-              onClick={() => setShowShare(true)}
-              className="btn-primary"
-            >
-              <Users className="w-4 h-4" /> Share
-            </button>
-          )}
-          <Avatar name={currentUser.displayName} color={currentUser.avatarColor} size={32} />
-        </div>
-      </header>
-
-      {/* The Collabora iframe is filled via a self-submitting form (POST) so we
-          can send access_token in the body rather than the URL. */}
+      {/* Self-submitting form so we can send access_token in the POST body
+          (cookie/header-friendly) rather than the URL. */}
       <form
         ref={formRef}
         action={iframeUrl}
@@ -96,6 +69,7 @@ export function EditorClient(props: EditorClientProps) {
       </form>
 
       <iframe
+        ref={iframeRef}
         name="collabora-frame"
         title={docTitle}
         className="flex-1 w-full border-0"

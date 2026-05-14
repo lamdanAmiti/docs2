@@ -1,27 +1,29 @@
-/* ───────────────────────────────────────────────────────────────────────────
-   Velr Docs — visual overrides for Collabora Online
-   Mirrors the Tiptap editor's look from earlier docs.velr.app revisions:
-   Google Docs-style chrome, velr color palette, Inter for UI text.
+/* ════════════════════════════════════════════════════════════════════════
+   Velr Docs — Full Collabora chrome restructuring
+   Goal: make the editor look like the old Tiptap layout from /root/docs
+         (commit cb4c185) — Google Docs-style chrome on top of LibreOffice.
+   ──────────────────────────────────────────────────────────────────────── */
 
-   Loaded after Collabora's bundle.css via a <link> injected into cool.html
-   by Dockerfile.collabora.
-   ───────────────────────────────────────────────────────────────────────── */
+/* ─── 1. Self-host Instrument Sans (UI font) ───────────────────────────── */
+@font-face { font-family:'Instrument Sans'; src:url('fonts/instrument-sans-400.ttf') format('truetype'); font-weight:400; font-display:swap; }
+@font-face { font-family:'Instrument Sans'; src:url('fonts/instrument-sans-500.ttf') format('truetype'); font-weight:500; font-display:swap; }
+@font-face { font-family:'Instrument Sans'; src:url('fonts/instrument-sans-600.ttf') format('truetype'); font-weight:600; font-display:swap; }
+@font-face { font-family:'Instrument Sans'; src:url('fonts/instrument-sans-700.ttf') format('truetype'); font-weight:700; font-display:swap; }
 
-/* ─── Velr design tokens ────────────────────────────────────────────────── */
 :root {
-  /* Velr palette — keep in sync with /tailwind.config.ts colors.velr.* */
-  --velr-paper:               #ffffff;
-  --velr-canvas:              #f8fafe;
-  --velr-surface-container:   #f1f5f9;
-  --velr-rule:                #c6c6c6;
-  --velr-ink:                 #202124;
-  --velr-accent:              #1a73e8;
-  --velr-accent-hover:        #1765cc;
-  --velr-subtle:              #5f6368;
-  --velr-chip:                #e8f0fe;
-  --velr-chip-text:           #1967d2;
+  /* Velr palette — keep in sync with tailwind.config.ts colors.velr.* */
+  --velr-paper:             #ffffff;
+  --velr-canvas:            #f8fafe;
+  --velr-surface-container: #f1f5f9;
+  --velr-rule:              #c6c6c6;
+  --velr-ink:               #202124;
+  --velr-accent:            #1a73e8;
+  --velr-accent-hover:      #1765cc;
+  --velr-subtle:            #5f6368;
+  --velr-chip:              #e8f0fe;
+  --velr-chip-text:         #1967d2;
 
-  /* Map Collabora's theme variables onto the velr palette */
+  /* Map onto every Collabora theme var we can find */
   --color-primary:            var(--velr-accent);
   --color-primary-dark:       var(--velr-accent-hover);
   --color-primary-darker:     #0d47a1;
@@ -30,7 +32,7 @@
 
   --color-main-text:          var(--velr-ink);
   --color-text-dark:          var(--velr-ink);
-  --color-text-darker:        #000000;
+  --color-text-darker:        #000;
   --color-text-lighter:       var(--velr-subtle);
 
   --color-main-background:    var(--velr-paper);
@@ -40,7 +42,7 @@
   --color-background-tabs-group: var(--velr-surface-container);
 
   --color-canvas:             var(--velr-canvas);
-  --color-overlay:            rgba(26, 115, 232, 0.08);
+  --color-overlay:            rgba(26,115,232,0.08);
 
   --color-border:             var(--velr-rule);
   --color-border-dark:        #9aa0a6;
@@ -50,8 +52,8 @@
   --color-toolbar-border:     var(--velr-rule);
   --color-stylesview-border:  var(--velr-rule);
 
-  --color-box-shadow-light:   rgba(60, 64, 67, 0.15);
-  --color-box-shadow:         rgba(60, 64, 67, 0.30);
+  --color-box-shadow-light:   rgba(60,64,67,0.15);
+  --color-box-shadow:         rgba(60,64,67,0.30);
 
   --color-error:              #d93025;
   --color-warning:            #f9ab00;
@@ -59,90 +61,93 @@
   --color-hyperlink:          var(--velr-accent);
 }
 
-/* ─── Typography — Instrument Sans for all UI chrome ────────────────────── */
-/* Self-host the font so we don't depend on the parent page's loader.
-   The TTFs are baked into the image alongside the english fonts. */
-@font-face {
-  font-family: 'Instrument Sans';
-  src: url('/browser/dist/fonts/instrument-sans-400.ttf') format('truetype');
-  font-weight: 400; font-style: normal; font-display: swap;
+/* ─── 2. Global typography (Instrument Sans, antialiased) ──────────────── */
+html, body,
+body *:not(.ProseMirror):not(.leaflet-objects-pane):not(canvas) {
+  font-family: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
 }
-@font-face {
-  font-family: 'Instrument Sans';
-  src: url('/browser/dist/fonts/instrument-sans-500.ttf') format('truetype');
-  font-weight: 500; font-style: normal; font-display: swap;
-}
-@font-face {
-  font-family: 'Instrument Sans';
-  src: url('/browser/dist/fonts/instrument-sans-600.ttf') format('truetype');
-  font-weight: 600; font-style: normal; font-display: swap;
-}
-@font-face {
-  font-family: 'Instrument Sans';
-  src: url('/browser/dist/fonts/instrument-sans-700.ttf') format('truetype');
-  font-weight: 700; font-style: normal; font-display: swap;
-}
-
-body,
-.notebookbar-tabs-container,
-.w2ui-tb-text,
-.w2ui-menu,
-#main-document-content,
-#document-titlebar,
-#tb_editbar_item,
-.lokdialog,
-.ui-input-tooltip-text,
-.cool-input,
-.unobutton,
-.toolbar-input,
-.menubar,
-.menubar-shell,
-button,
-input,
-select {
-  font-family:
-    'Instrument Sans',
-    -apple-system, BlinkMacSystemFont,
-    'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ─── Canvas background (the area around the page) ──────────────────────── */
+/* ─── 0. HIDE COLLABORA'S OWN CHROME ───────────────────────────────────
+   We render our own Tiptap-style TopBar + Toolbar in the parent app on
+   top of the iframe. Inside the iframe we want only the document area. */
+#toolbar-wrapper,
+#document-titlebar,
+.document-title-bar,
+#main-menu,
+.main-nav,
+#menu-bar-container,
+.cool-toolbar,
+.notebookbar-shortcuts-bar,
+#toolbar-up,
+#toolbar-row,
+.w2ui-toolbar,
+.notebookbar-tabs-container,
+#NotebookBar,
+#presentation-toolbar,
+#spreadsheet-toolbar,
+#toolbar-search,
+#toolbar-mobile-back,
+#toolbar-hamburger,
+#tb_editbar,
+#mobile-edit-button,
+.menubar,
+.menubar-shell,
+.toolbar-bottom,
+#toolbar-down,
+.notebookbar,
+#shortcuts-toolbar,
+#document-name-input-loading-bar { display: none !important; }
+
+/* Pull the canvas to fill the iframe since we hid the chrome */
 .canvas-container,
 #document-container,
 .leaflet-container,
 #map {
+  top: 0 !important;
+  height: 100vh !important;
+}
+
+/* ─── 3. Hide everything Collabora-branded ─────────────────────────────── */
+.toolbar-bg-logo,
+.document-logo,
+.leaflet-progress-spinner::before,
+.about-dialog-product-logo,
+#toolbar-logo,
+.img-coda-app-logo,
+.welcome-page-logo {
+  display: none !important;
+}
+
+/* ─── 4. Top-of-document area — restructure to look like Tiptap TopBar ─── */
+
+/* Outer surface */
+#toolbar-wrapper {
   background: var(--velr-canvas) !important;
+  border-bottom: 1px solid var(--velr-rule) !important;
+  padding: 6px 12px 0 !important;
+  box-shadow: none !important;
 }
 
-/* ─── Page (paper) — give it the Google Docs shadow ─────────────────────── */
-.page-break-indicator,
-.canvas-overlay-pages .page {
-  background: var(--velr-paper) !important;
-  box-shadow: 0 1px 3px 1px rgba(60, 64, 67, 0.15) !important;
-  border: none !important;
-}
-
-/* ─── Top notebook bar / menubar ────────────────────────────────────────── */
-#toolbar-wrapper,
-.notebookbar-tabs-container,
-#mobile-edit-button,
+/* Title row — slimmer, Inter-ish */
 #document-titlebar,
-.menubar-shell {
-  background: var(--velr-paper) !important;
-  border-bottom: 1px solid var(--velr-rule);
+.document-title-bar,
+#document-name-input-loading-bar {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
 }
 
-/* Title field in title bar — closer to the old Tiptap title styling */
-#document-name-input,
-.document-name-input {
+#document-name-input {
   font-size: 17px !important;
   font-weight: 400 !important;
   color: var(--velr-ink) !important;
   border: 1px solid transparent !important;
   background: transparent !important;
-  border-radius: 6px;
+  border-radius: 6px !important;
   padding: 4px 8px !important;
   transition: background-color 120ms ease, border-color 120ms ease;
 }
@@ -155,146 +160,264 @@ select {
   outline: none !important;
 }
 
-/* ─── Menu bar items (File / Edit / View / ...) ─────────────────────────── */
-.main-menu .menu-entry,
-#main-menu li > a,
-.unobutton {
-  border-radius: 6px !important;
-  color: var(--velr-ink) !important;
-}
-.main-menu .menu-entry:hover,
-#main-menu li > a:hover,
-.unobutton:hover {
-  background: var(--velr-surface-container) !important;
+/* Insert a synthetic FileText "logo" before the title — pure CSS */
+#document-titlebar::before {
+  content: "";
+  width: 28px;
+  height: 28px;
+  margin-right: 6px;
+  background: var(--velr-accent);
+  -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><path d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'/><polyline points='14 2 14 8 20 8'/><line x1='16' y1='13' x2='8' y2='13'/><line x1='16' y1='17' x2='8' y2='17'/><polyline points='10 9 9 9 8 9'/></svg>") no-repeat center / 18px;
+          mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><path d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'/><polyline points='14 2 14 8 20 8'/><line x1='16' y1='13' x2='8' y2='13'/><line x1='16' y1='17' x2='8' y2='17'/><polyline points='10 9 9 9 8 9'/></svg>") no-repeat center / 18px;
+  align-self: center;
+  flex: 0 0 auto;
+  border-radius: 6px;
 }
 
-/* ─── Toolbar buttons (Bold/Italic/etc) ─────────────────────────────────── */
-.w2ui-tb-button,
-.toolbar-button,
-.cool-toolbar .unobutton {
+/* ─── 5. Classic menubar (File / Edit / View / ...) — Tiptap MenuBar look ── */
+#main-menu,
+.main-nav,
+#menu-bar-container {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 2px 0 0 !important;
+}
+#main-menu > li > a,
+.main-menu .menu-entry,
+.menu-bar a {
+  color: var(--velr-ink) !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  padding: 4px 10px !important;
   border-radius: 6px !important;
-  margin: 1px !important;
-  background: transparent;
+  border: none !important;
+  background: transparent !important;
+  margin-right: 2px;
+}
+#main-menu > li > a:hover,
+.main-menu .menu-entry:hover,
+.menu-bar a:hover,
+#main-menu > li.open > a {
+  background: var(--velr-surface-container) !important;
+  color: var(--velr-ink) !important;
+}
+
+/* ─── 6. Slim compact toolbar — like Tiptap's icon toolbar ─────────────── */
+.cool-toolbar,
+.notebookbar-shortcuts-bar,
+#toolbar-up,
+.w2ui-toolbar {
+  background: var(--velr-canvas) !important;
+  border: none !important;
+  border-top: 1px solid var(--velr-rule) !important;
+  padding: 4px 6px !important;
+  box-shadow: none !important;
+  min-height: 42px;
+}
+
+/* Toolbar buttons → rounded, hover-fill, blue-chip active */
+.w2ui-tb-button,
+.unobutton,
+.toolbar-button,
+.cool-toolbar button {
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  border-radius: 6px !important;
+  margin: 0 1px !important;
+  padding: 4px 6px !important;
+  min-width: 28px;
+  min-height: 28px;
   transition: background-color 120ms ease;
+  color: var(--velr-ink) !important;
 }
 .w2ui-tb-button:hover,
+.unobutton:hover,
 .toolbar-button:hover,
-.cool-toolbar .unobutton:hover {
+.cool-toolbar button:hover {
   background: var(--velr-surface-container) !important;
 }
 .w2ui-tb-button.checked,
 .w2ui-tb-button.over.checked,
-.cool-toolbar .unobutton.selected,
-.cool-toolbar .unobutton.checked,
+.unobutton.selected,
+.unobutton.checked,
 .toolbar-button.selected {
   background: var(--velr-chip) !important;
   color: var(--velr-chip-text) !important;
+  border-color: transparent !important;
+}
+.w2ui-tb-down { display: none !important; } /* hide the tiny "down" arrow caps */
+
+/* Toolbar separators — thinner */
+.w2ui-tb-break,
+.cool-toolbar .separator {
+  background: var(--velr-rule) !important;
+  margin: 0 6px !important;
+  width: 1px !important;
 }
 
-/* ─── Notebook bar tabs (Home / Insert / View ...) ──────────────────────── */
-.notebookbar-tab,
-.notebookbar-tabs-container .ui-tabs-anchor {
-  color: var(--velr-subtle) !important;
-  border-bottom: 2px solid transparent !important;
-  padding: 6px 14px !important;
-}
-.notebookbar-tab.selected,
-.notebookbar-tabs-container .ui-tabs-active .ui-tabs-anchor {
-  color: var(--velr-accent) !important;
-  border-bottom-color: var(--velr-accent) !important;
-  background: transparent !important;
-}
+/* ─── 7. Hide notebook-bar tabs (we set compact mode but kill them too) ── */
+.notebookbar-tabs-container,
+.notebookbar-shortcuts-bar > .notebookbar-tabs,
+#NotebookBar,
+#Home-content-container,
+#Insert-content-container,
+#Layout-content-container,
+#References-content-container,
+#View-content-container,
+#Mailings-content-container,
+#Review-content-container { display: none !important; }
 
-/* ─── Sidebar (right panel: properties, navigator) ──────────────────────── */
-#sidebar-dock-wrapper,
-#sidebar-panel {
+/* ─── 8. Canvas + page styling — Google Docs paper feel ─────────────────── */
+.canvas-container,
+#document-container,
+.leaflet-container,
+#map {
+  background: var(--velr-canvas) !important;
+}
+.leaflet-tile-container canvas,
+.canvas-overlay-pages .page {
   background: var(--velr-paper) !important;
-  border-left: 1px solid var(--velr-rule);
+  box-shadow: 0 1px 3px 1px rgba(60,64,67,0.15) !important;
+  border: none !important;
 }
 
-/* ─── Status bar (bottom) ───────────────────────────────────────────────── */
+/* ─── 9. Sidebar — tighter, white, blue accent ──────────────────────────── */
+#sidebar-dock-wrapper,
+#sidebar-panel,
+.sidebar-content-container {
+  background: var(--velr-paper) !important;
+  border-left: 1px solid var(--velr-rule) !important;
+}
+
+/* ─── 10. Status bar — Tiptap had none; mute Collabora's heavily ────────── */
 #toolbar-down,
-.toolbar-bottom {
-  background: var(--velr-surface-container) !important;
-  border-top: 1px solid var(--velr-rule);
-  color: var(--velr-subtle);
+.toolbar-bottom,
+.bottom-toolbar {
+  background: var(--velr-paper) !important;
+  border-top: 1px solid var(--velr-rule) !important;
+  color: var(--velr-subtle) !important;
+  font-size: 12px !important;
+  min-height: 28px !important;
+  padding: 0 8px !important;
 }
 
-/* ─── Form controls (selects, inputs in toolbar) ────────────────────────── */
+/* ─── 11. Form controls ─────────────────────────────────────────────────── */
 input[type="text"],
 input[type="search"],
+input[type="number"],
 select,
 .ui-state-default {
-  border-color: var(--velr-rule) !important;
+  border: 1px solid var(--velr-rule) !important;
   border-radius: 6px !important;
-  color: var(--velr-ink);
+  color: var(--velr-ink) !important;
+  background: var(--velr-paper) !important;
+  font-size: 13px !important;
 }
 input[type="text"]:focus,
 input[type="search"]:focus,
+input[type="number"]:focus,
 select:focus {
   border-color: var(--velr-accent) !important;
-  box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
-  outline: none;
+  box-shadow: 0 0 0 2px rgba(26,115,232,0.2) !important;
+  outline: none !important;
 }
 
-/* ─── Primary action buttons (Save dialog, Insert link, etc) ────────────── */
+/* ─── 12. Dialog buttons — primary = velr-accent ────────────────────────── */
 .ui-button.ui-state-primary,
 .ui-dialog-buttonset button.ui-button-primary,
 button[type="submit"].ui-button,
-.cool-button.primary {
+.cool-button.primary,
+.uno-button.primary {
   background: var(--velr-accent) !important;
   border-color: var(--velr-accent) !important;
   color: #fff !important;
   border-radius: 6px !important;
   font-weight: 500;
+  padding: 6px 14px !important;
 }
 .ui-button.ui-state-primary:hover,
-.ui-dialog-buttonset button.ui-button-primary:hover,
-button[type="submit"].ui-button:hover,
 .cool-button.primary:hover {
   background: var(--velr-accent-hover) !important;
   border-color: var(--velr-accent-hover) !important;
 }
 
-/* ─── Dropdown menus (File/Edit/etc. popouts) ───────────────────────────── */
+/* ─── 13. Dropdown menus (File ▾ etc.) — rounded card with shadow ───────── */
 .w2ui-menu,
 .lokdialog .ui-menu,
-.menu-popup {
+.menu-popup,
+.uno-popup {
   background: var(--velr-paper) !important;
   border: 1px solid var(--velr-rule) !important;
   border-radius: 10px !important;
-  box-shadow: 0 4px 12px rgba(60, 64, 67, 0.15) !important;
+  box-shadow: 0 4px 12px rgba(60,64,67,0.15) !important;
   padding: 4px !important;
+  font-size: 13px;
+}
+.w2ui-menu .w2ui-item,
+.menu-popup li {
+  border-radius: 6px;
+  padding: 6px 10px !important;
 }
 .w2ui-menu .w2ui-item:hover,
 .menu-popup li:hover {
   background: var(--velr-surface-container) !important;
-  border-radius: 6px;
+}
+.w2ui-menu .w2ui-item.checked {
+  color: var(--velr-accent) !important;
 }
 
-/* ─── Scrollbars — slimmer and neutral, Docs-style ─────────────────────── */
+/* ─── 14. Scrollbars — slim Google-Docs style ───────────────────────────── */
 *::-webkit-scrollbar { width: 10px; height: 10px; }
 *::-webkit-scrollbar-track { background: transparent; }
 *::-webkit-scrollbar-thumb {
-  background: rgba(60, 64, 67, 0.18);
+  background: rgba(60,64,67,0.18);
   border-radius: 10px;
   border: 2px solid transparent;
   background-clip: padding-box;
 }
 *::-webkit-scrollbar-thumb:hover {
-  background: rgba(60, 64, 67, 0.30);
+  background: rgba(60,64,67,0.30);
   background-clip: padding-box;
 }
 
-/* ─── Hide some of the noisier Collabora chrome the Tiptap UI didn't have ─ */
-.preview-bar,
-.toolbar-bg-logo,
-#prevbutton,
-#nextbutton {
-  /* Comment in/out specific ones if you want them back */
+/* ─── 15. Caret color (match Tiptap's velr-caret) ───────────────────────── */
+.leaflet-cursor.blinking-cursor,
+.leaflet-cursor-handler {
+  background: var(--velr-ink) !important;
 }
 
-/* ─── Selection caret color ─────────────────────────────────────────────── */
-.leaflet-cursor.blinking-cursor {
-  background: var(--velr-ink) !important;
+/* ─── 16. "About Collabora" branding strip in About dialog — gone ───────── */
+.about-dialog .about-dialog-credits,
+.about-dialog-credit,
+.product-link,
+.collabora-credits {
+  display: none !important;
+}
+
+/* ─── 17. Loading spinner restyle (no Collabora logo) ───────────────────── */
+.leaflet-progress-spinner {
+  background: var(--velr-canvas);
+}
+.leaflet-progress-spinner-canvas {
+  filter: hue-rotate(200deg) saturate(0.8) brightness(1.1);
+}
+
+/* ─── 18. Welcome page (when shown) ─────────────────────────────────────── */
+#welcome-iframe,
+.welcome-page {
+  background: var(--velr-canvas) !important;
+}
+
+/* ─── 19. Comment / track-changes balloons ──────────────────────────────── */
+.cool-annotation,
+.annotation-wrap {
+  background: var(--velr-paper) !important;
+  border: 1px solid var(--velr-rule) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 2px 6px rgba(60,64,67,0.10) !important;
+}
+.cool-annotation-author {
+  color: var(--velr-accent) !important;
+  font-weight: 600 !important;
 }

@@ -19,6 +19,29 @@
   .btn-primary { @apply btn bg-velr-accent hover:bg-velr-accent-hover text-white; }
   .btn-ghost   { @apply btn text-velr-ink hover:bg-velr-surface-container; }
   .btn-outline { @apply btn border border-velr-rule text-velr-ink hover:bg-white; }
+
+  /* Editor toolbar primitives — straight from the original Tiptap editor */
+  .tb-btn {
+    @apply inline-flex items-center justify-center rounded-full h-8 px-2 text-velr-ink
+           hover:bg-white/70 active:bg-white transition-colors
+           disabled:opacity-40 disabled:cursor-not-allowed text-sm leading-none;
+  }
+  .tb-btn.active {
+    @apply bg-velr-chip text-velr-chip-text;
+  }
+  .tb-sep {
+    @apply mx-1 inline-block h-5 w-px bg-velr-rule self-center;
+  }
+  .menu-item {
+    @apply flex items-center justify-between px-3 py-1.5 text-sm text-velr-ink
+           hover:bg-gray-50 cursor-pointer select-none;
+  }
+  .menu-item.disabled {
+    @apply text-velr-subtle/60 cursor-not-allowed hover:bg-transparent;
+  }
+  .menu-item .shortcut {
+    @apply text-xs text-velr-subtle ml-6;
+  }
 }
 
 :root {

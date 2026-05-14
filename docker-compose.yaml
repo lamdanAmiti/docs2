@@ -52,7 +52,9 @@ services:
       - username=${COLLABORA_ADMIN_USER}
       - password=${COLLABORA_ADMIN_PASSWORD}
       - dictionaries=en_US
-      - extra_params=--o:ssl.enable=false --o:ssl.termination=true --o:welcome.enable=false --o:net.proto=IPv4
+      # user_interface.mode=compact gives us the classic menubar + slim
+      # toolbar (no ribbon), which is much closer to Tiptap / Google Docs.
+      - extra_params=--o:ssl.enable=false --o:ssl.termination=true --o:welcome.enable=false --o:net.proto=IPv4 --o:user_interface.mode=compact
       - DONT_GEN_SSL_CERT=1
     # Fonts are baked into the image via Dockerfile.collabora (both
     # /usr/share/fonts/truetype/ AND /opt/cool/systemplate/ so the chroot
