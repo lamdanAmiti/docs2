@@ -42,6 +42,8 @@ export interface ActiveState {
   highlight?: string;
   canUndo?: boolean;
   canRedo?: boolean;
+  /** Currently-applied paragraph style name (e.g. "Heading 1") */
+  paraStyle?: string;
 }
 
 const ALIGN_UNO: Record<'left' | 'center' | 'right' | 'justify', string> = {
@@ -79,8 +81,15 @@ export interface CollaboraCommands {
   setHighlight:(hex: string) => void;
   clearFormatting: () => void;
   setHeading: (level: 0 | 1 | 2 | 3 | 4 | 5 | 6) => void;
+  setParaStyle: (styleName: string) => void;
   setDirection: (dir: 'ltr' | 'rtl') => void;
   zoom: (pct: number) => void;
+  /** Open a file picker and insert the chosen image at the caret. */
+  insertImage: () => Promise<void>;
+  /** Begin drawing a horizontal text frame (click+drag on canvas). */
+  insertTextBox: () => void;
+  /** Begin drawing a vertical text frame. */
+  insertVerticalTextBox: () => void;
   uno: (command: string, args?: Record<string, unknown>) => void;
 }
 
@@ -253,8 +262,64 @@ function buildCommands(getIframe: () => HTMLIFrameElement | null): CollaboraComm
       direct('.uno:ParaStyle', {
         'Style': { type: 'string', value: level === 0 ? 'Default Paragraph Style' : `Heading ${level}` },
       }),
+    setParaStyle: (style) =>
+      direct('.uno:ParaStyle', { 'Style': { type: 'string', value: style } }),
     setDirection: (dir) => direct(dir === 'rtl' ? '.uno:ParaRightToLeft' : '.uno:ParaLeftToRight'),
-    zoom: (pct) => direct('.uno:Zoom', { Zoom: { type: 'long', value: pct } }),
+    zoom: (pct) => {
+      // Use Collabora's percent-specific UNO commands (don't open dialogs).
+      const exact: Record<number, string> = {
+        50: '.uno:Zoom50', 75: '.uno:Zoom75', 100: '.uno:Zoom100Percent',
+        150: '.uno:Zoom150', 200: '.uno:Zoom200',
+      };
+      if (exact[pct]) return direct(exact[pct]);
+      // For arbitrary % use the leaflet zoom level directly. Collabora's
+      // zoom index → percentage table:
+      //   8 → 50%, 9 → 75%, 10 → 100%, 11 → 125%, 12 → 150%, etc.
+      const level = Math.round(10 + Math.log2(pct / 100) * 4);
+      const map = (getIframe()?.contentWindow as any)?.app?.map;
+      if (map?.setZoom) { try { map.setZoom(level); return; } catch {} }
+      direct(pct < 100 ? '.uno:ZoomMinus' : '.uno:ZoomPlus');
+    },
+    insertImage: async () => {
+      const iframe = getIframe();
+      if (!iframe) return;
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      const file: File | null = await new Promise((resolve) => {
+        input.onchange = () => resolve(input.files?.[0] ?? null);
+        input.click();
+      });
+      if (!file) return;
+
+      // Simulate a paste of the file into the Collabora document.
+      // Same-origin → we can dispatch ClipboardEvent on the iframe doc directly.
+      try {
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        const ev = new ClipboardEvent('paste', {
+          clipboardData: dt as any,
+          bubbles: true,
+          cancelable: true,
+        });
+        iframe.contentDocument?.dispatchEvent(ev);
+      } catch (e) {
+        // Fallback: hand the bytes to Collabora's clipboard plumbing.
+        try {
+          const buf = await file.arrayBuffer();
+          const blob = new Blob([buf], { type: file.type });
+          const url = (iframe.contentWindow as any).URL.createObjectURL(blob);
+          direct('.uno:InsertGraphic', {
+            URL: { type: 'string', value: url },
+            FilterName: { type: 'string', value: '' },
+          });
+        } catch (err) {
+          console.warn('insertImage failed', err);
+        }
+      }
+    },
+    insertTextBox:         () => direct('.uno:InsertFrameInteract'),
+    insertVerticalTextBox: () => direct('.uno:VerticalTextFrameInteract'),
     uno: (command, args) => direct(command, args),
   };
 }
@@ -278,6 +343,8 @@ const VALUE_MAPPING: Record<string, keyof ActiveState> = {
   'FontHeight':   'fontSize',
   'Color':        'color',
   'BackColor':    'highlight',
+  'StyleApply':   'paraStyle',
+  'ParaStyle':    'paraStyle',
 };
 
 /**
@@ -317,7 +384,8 @@ export function useCollaboraCommands(iframeRef: React.RefObject<HTMLIFrameElemen
     function onStateChanged(e: any) {
       if (!e?.commandName) return;
       const cmd = String(e.commandName).replace(/^\.uno:/, '');
-      const state = String(e.state ?? '');
+      const rawState = e.state;
+      const state = String(rawState ?? '');
 
       const boolKey = STATE_MAPPING[cmd];
       if (boolKey) {
@@ -331,6 +399,14 @@ export function useCollaboraCommands(iframeRef: React.RefObject<HTMLIFrameElemen
       }
       if (cmd === 'Undo') setActive((p) => ({ ...p, canUndo: state === 'enabled' }));
       if (cmd === 'Redo') setActive((p) => ({ ...p, canRedo: state === 'enabled' }));
+    }
+
+    // Some Collabora versions emit paragraph style as 'StyleApply' values
+    // rather than ParaStyle. Also listen to the dedicated event.
+    function onStyleApply(e: any) {
+      if (typeof e?.state === 'string') {
+        setActive((prev) => ({ ...prev, paraStyle: e.state }));
+      }
     }
 
     function injectStyle(doc: Document) {

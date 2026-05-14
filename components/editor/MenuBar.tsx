@@ -84,15 +84,21 @@ function buildMenus(commands: CollaboraCommands, active: ActiveState): Menu[] {
     {
       label: 'Insert',
       items: [
-        { label: 'Image…',       onClick: () => uno('.uno:InsertGraphic') },
+        { label: 'Image…',                   onClick: () => commands.insertImage() },
         { label: 'Link…',  shortcut: 'Ctrl+K',  onClick: () => {
             const url = window.prompt('URL', 'https://');
             if (url) commands.insertLink(url);
           } },
-        { label: 'Table…',       onClick: () => commands.insertTable(3, 3) },
-        { label: 'Chart…',       onClick: () => uno('.uno:InsertObjectChart') },
-        { label: 'Special character…',  onClick: () => uno('.uno:InsertSymbol') },
-        { label: 'Formula',             onClick: () => uno('.uno:InsertObjectStarMath') },
+        { label: 'Table…',                   onClick: () => commands.insertTable(3, 3) },
+        'sep',
+        { label: 'Text box',                 onClick: commands.insertTextBox },
+        { label: 'Vertical text box',        onClick: commands.insertVerticalTextBox },
+        { label: 'Frame',                    onClick: () => uno('.uno:InsertFrame') },
+        'sep',
+        { label: 'Chart…',                   onClick: () => uno('.uno:InsertObjectChart') },
+        { label: 'OLE object…',              onClick: () => uno('.uno:InsertObject') },
+        { label: 'Special character…',       onClick: () => uno('.uno:InsertSymbol') },
+        { label: 'Formula',                  onClick: () => uno('.uno:InsertObjectStarMath') },
         'sep',
         { label: 'Comment',         shortcut: 'Ctrl+Alt+C', onClick: () => uno('.uno:InsertAnnotation') },
         { label: 'Footnote',                                onClick: () => uno('.uno:InsertFootnote') },

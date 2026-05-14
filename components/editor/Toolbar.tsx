@@ -69,7 +69,7 @@ export function Toolbar({ commands, active }: ToolbarProps) {
 
         <span className="tb-sep" />
 
-        <BlockTypeSelect commands={commands} />
+        <BlockTypeSelect commands={commands} current={active.paraStyle} />
 
         <span className="tb-sep" />
 
@@ -121,7 +121,7 @@ export function Toolbar({ commands, active }: ToolbarProps) {
         }}>
           <Link2 className="w-[18px] h-[18px]" />
         </Btn>
-        <Btn title="Insert image" onClick={() => commands.uno('.uno:InsertGraphic')}>
+        <Btn title="Insert image" onClick={() => { commands.insertImage(); }}>
           <ImageIcon className="w-[18px] h-[18px]" />
         </Btn>
 
@@ -201,14 +201,17 @@ function ZoomControl({ commands }: { commands: CollaboraCommands }) {
   function applyZoom(pct: number) {
     const clamped = Math.max(20, Math.min(400, pct));
     setZoom(clamped);
-    commands.uno('.uno:Zoom', {
-      Zoom: { type: 'long', value: clamped },
-    });
+    commands.zoom(clamped);
   }
 
   function bump(delta: number) {
+    // Use Collabora's native ZoomPlus/ZoomMinus for +/- since they snap
+    // to the same zoom levels Collabora uses internally, keeping our %
+    // display in sync.
+    if (delta > 0) commands.uno('.uno:ZoomPlus');
+    else commands.uno('.uno:ZoomMinus');
     const step = zoom < 100 ? 10 : 25;
-    applyZoom(zoom + delta * step);
+    setZoom((z) => Math.max(20, Math.min(400, z + delta * step)));
   }
 
   return (
@@ -270,7 +273,7 @@ function ZoomControl({ commands }: { commands: CollaboraCommands }) {
 }
 
 /* ─── BlockTypeSelect ─────────────────────────────────────────────────── */
-function BlockTypeSelect({ commands }: { commands: CollaboraCommands }) {
+function BlockTypeSelect({ commands, current }: { commands: CollaboraCommands; current?: string }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -281,29 +284,44 @@ function BlockTypeSelect({ commands }: { commands: CollaboraCommands }) {
     return () => window.removeEventListener('mousedown', onClick);
   }, [open]);
 
-  const options: { label: string; size: string; level: 0 | 1 | 2 | 3 | 4 | 5 | 6 }[] = [
-    { label: 'Normal text', size: '11pt', level: 0 },
-    { label: 'Title',       size: '26pt', level: 1 },
-    { label: 'Subtitle',    size: '20pt', level: 2 },
-    { label: 'Heading 1',   size: '16pt', level: 3 },
-    { label: 'Heading 2',   size: '14pt', level: 4 },
-    { label: 'Heading 3',   size: '13pt', level: 5 },
+  const options: { label: string; size: string; style: string }[] = [
+    { label: 'Normal text',     size: '11pt', style: 'Default Paragraph Style' },
+    { label: 'Title',           size: '26pt', style: 'Title' },
+    { label: 'Subtitle',        size: '20pt', style: 'Subtitle' },
+    { label: 'Heading 1',       size: '18pt', style: 'Heading 1' },
+    { label: 'Heading 2',       size: '16pt', style: 'Heading 2' },
+    { label: 'Heading 3',       size: '14pt', style: 'Heading 3' },
+    { label: 'Heading 4',       size: '13pt', style: 'Heading 4' },
+    { label: 'Heading 5',       size: '12pt', style: 'Heading 5' },
+    { label: 'Heading 6',       size: '11pt', style: 'Heading 6' },
+    { label: 'Quotation',       size: '11pt', style: 'Quotations' },
+    { label: 'Preformatted',    size: '11pt', style: 'Preformatted Text' },
+    { label: 'List bullet',     size: '11pt', style: 'List Bullet' },
+    { label: 'List number',     size: '11pt', style: 'List Number' },
   ];
+
+  // Show the friendly label if we can find one, otherwise show the raw style name.
+  const activeLabel = current
+    ? (options.find((o) => o.style === current)?.label ?? current)
+    : 'Style';
 
   return (
     <div ref={ref} className="relative">
-      <button type="button" onClick={() => setOpen((o) => !o)} className="tb-btn min-w-[110px] justify-between gap-1">
-        <span className="truncate">Style</span>
+      <button type="button" onClick={() => setOpen((o) => !o)} className="tb-btn min-w-[130px] justify-between gap-1">
+        <span className="truncate">{activeLabel}</span>
         <ChevronDown className="w-3 h-3 opacity-60" />
       </button>
       {open && (
-        <div className="absolute left-0 top-full mt-1 z-50 w-[200px] bg-white border border-velr-rule rounded-lg shadow-lg py-1">
+        <div className="absolute left-0 top-full mt-1 z-50 w-[220px] max-h-[60vh] overflow-y-auto bg-white border border-velr-rule rounded-lg shadow-lg py-1">
           {options.map((o) => (
             <button
               key={o.label}
               type="button"
-              onMouseDown={(e) => { e.preventDefault(); commands.setHeading(o.level); setOpen(false); }}
-              className="w-full text-left px-3 py-1.5 text-sm hover:bg-gray-50"
+              onMouseDown={(e) => { e.preventDefault(); commands.setParaStyle(o.style); setOpen(false); }}
+              className={clsx(
+                'w-full text-left px-3 py-1.5 text-sm hover:bg-gray-50',
+                (current === o.style || (!current && o.style === 'Default Paragraph Style')) && 'bg-velr-chip text-velr-chip-text',
+              )}
             >
               <span style={{ fontSize: o.size, lineHeight: 1.1 }}>{o.label}</span>
             </button>
