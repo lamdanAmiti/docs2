@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Cloud, Share2, FileText } from 'lucide-react';
+import { Cloud, Share2, FileText, PanelRight } from 'lucide-react';
+import { clsx } from 'clsx';
 import { MenuBar } from './MenuBar';
 import type { CollaboraCommands, ActiveState } from '@/lib/collabora-commands';
 
@@ -13,9 +14,11 @@ interface Props {
   commands: CollaboraCommands;
   active: ActiveState;
   savedHint?: string;
+  sidebarOpen?: boolean;
+  onToggleSidebar?: () => void;
 }
 
-export function TopBar({ title, onRename, onShare, commands, active, savedHint = 'Saved' }: Props) {
+export function TopBar({ title, onRename, onShare, commands, active, savedHint = 'Saved', sidebarOpen, onToggleSidebar }: Props) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(title);
 
@@ -64,6 +67,22 @@ export function TopBar({ title, onRename, onShare, commands, active, savedHint =
       </div>
 
       <div className="flex items-center gap-2 mb-1">
+        {onToggleSidebar && (
+          <button
+            type="button"
+            onClick={onToggleSidebar}
+            className={clsx(
+              'inline-flex items-center justify-center w-9 h-9 rounded-md',
+              sidebarOpen
+                ? 'bg-velr-chip text-velr-chip-text'
+                : 'text-velr-subtle hover:text-velr-ink hover:bg-gray-50',
+            )}
+            title={sidebarOpen ? 'Hide properties panel' : 'Show properties panel'}
+            aria-pressed={sidebarOpen}
+          >
+            <PanelRight className="w-4 h-4" />
+          </button>
+        )}
         <Link
           href="/home"
           className="text-sm text-velr-subtle hover:text-velr-ink hover:bg-gray-50 px-2.5 py-1.5 rounded-md"

@@ -121,7 +121,31 @@ const STRIPPED_CHROME_CSS = `
   #quickfind-dock-wrapper,
   #userListHeader,
   #userListSummary,
-  #followingChip { display: none !important; }
+  #followingChip,
+  #sidebar-panel,
+  .sidebar-panel,
+  #navigator-panel,
+  #quickfind-panel { display: none !important; }
+
+  /* When body has .velr-show-sidebar, reveal the properties sidebar */
+  body.velr-show-sidebar #sidebar-panel,
+  body.velr-show-sidebar .sidebar-panel,
+  body.velr-show-sidebar #sidebar-dock-wrapper {
+    display: block !important;
+    position: fixed !important;
+    right: 0 !important; top: 0 !important; bottom: 0 !important;
+    width: 320px !important;
+    z-index: 50 !important;
+    background: #ffffff !important;
+    border-left: 1px solid #c6c6c6 !important;
+    overflow-y: auto !important;
+  }
+  body.velr-show-sidebar #main-document-content,
+  body.velr-show-sidebar #document-container,
+  body.velr-show-sidebar #map {
+    right: 320px !important;
+    width: calc(100% - 320px) !important;
+  }
 
   /* 2. Make the document area fill the iframe completely. */
   html, body {
@@ -264,10 +288,22 @@ const VALUE_MAPPING: Record<string, keyof ActiveState> = {
  */
 export function useCollaboraCommands(iframeRef: React.RefObject<HTMLIFrameElement | null>) {
   const [active, setActive] = useState<ActiveState>({});
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const commandsRef = useRef<CollaboraCommands | null>(null);
 
   if (!commandsRef.current) {
     commandsRef.current = buildCommands(() => iframeRef.current);
+  }
+
+  function toggleSidebar() {
+    setSidebarOpen((wasOpen) => {
+      const next = !wasOpen;
+      const doc = iframeRef.current?.contentDocument;
+      if (doc?.body) doc.body.classList.toggle('velr-show-sidebar', next);
+      // Ask Collabora to actually populate the sidebar panel on first open.
+      if (next) commandsRef.current?.uno('.uno:Sidebar');
+      return next;
+    });
   }
 
   useEffect(() => {
@@ -336,5 +372,5 @@ export function useCollaboraCommands(iframeRef: React.RefObject<HTMLIFrameElemen
     };
   }, [iframeRef]);
 
-  return { commands: commandsRef.current!, active };
+  return { commands: commandsRef.current!, active, sidebarOpen, toggleSidebar };
 }

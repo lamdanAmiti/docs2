@@ -24,7 +24,7 @@ export function EditorClient(props: EditorClientProps) {
   const [docTitle, setDocTitle] = useState(title);
   const [savedHint, setSavedHint] = useState('Saved');
 
-  const { commands, active } = useCollaboraCommands(iframeRef);
+  const { commands, active, sidebarOpen, toggleSidebar } = useCollaboraCommands(iframeRef);
 
   // Auto-POST the form into the iframe on mount.
   useEffect(() => {
@@ -51,6 +51,8 @@ export function EditorClient(props: EditorClientProps) {
         commands={commands}
         active={active}
         savedHint={savedHint}
+        sidebarOpen={sidebarOpen}
+        onToggleSidebar={toggleSidebar}
       />
 
       <Toolbar commands={commands} active={active} />
