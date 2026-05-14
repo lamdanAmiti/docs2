@@ -29,7 +29,15 @@ COPY public/collabora-theme/fonts/ /usr/share/coolwsd/browser/dist/fonts/
 RUN sed -i 's|<link rel="stylesheet" href="%SERVICE_ROOT%/browser/%VERSION%/bundle.css" />|<link rel="stylesheet" href="%SERVICE_ROOT%/browser/%VERSION%/bundle.css" />\n<link rel="stylesheet" href="%SERVICE_ROOT%/browser/%VERSION%/velr-overrides.css" />|' \
         /usr/share/coolwsd/browser/dist/cool.html
 
-# 4. Refresh fontconfig cache so the editor advertises the new set immediately
+# 4. Bake an explicit alias_groups block into coolwsd.xml. The env-var
+#    aliasgroup1 mechanism produces a regex like "https://host:443" that
+#    Collabora's WOPI host matcher fails against incoming URLs without
+#    explicit port. A hostname-only pattern in mode="groups" reliably
+#    matches both forms.
+RUN sed -i 's|<alias_groups desc="[^"]*" mode="first">|<alias_groups mode="groups"><group><host allow="true">docs\\.velr\\.app</host></group>|' \
+        /etc/coolwsd/coolwsd.xml
+
+# 5. Refresh fontconfig cache so the editor advertises the new set immediately
 RUN fc-cache -fv >/dev/null 2>&1 || true
 
 USER cool

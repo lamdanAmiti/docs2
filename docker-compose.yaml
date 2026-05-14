@@ -41,11 +41,13 @@ services:
     environment:
       # Same-origin setup: Collabora's WOPI calls and iframe content are
       # served through docs.velr.app/{cool,browser,hosting,...} so the
-      # browser treats parent + iframe as same origin. This is the only
-      # reliable way to defeat Chrome's clipboard partitioning when the
-      # editor is iframed — without it, copy-from-doc never reaches the
-      # OS clipboard.
-      - aliasgroup1=https://docs\.velr\.app:443
+      # browser treats parent + iframe as same origin (fixes Chrome's
+      # clipboard partitioning).
+      #
+      # NOTE: aliasgroup1 env var is intentionally OMITTED. It produces a
+      # full-URL regex that fails to match incoming WOPISrc which lacks
+      # explicit :443. Dockerfile.collabora pre-configures alias_groups
+      # in coolwsd.xml with a hostname-only regex instead.
       - server_name=docs.velr.app
       - username=${COLLABORA_ADMIN_USER}
       - password=${COLLABORA_ADMIN_PASSWORD}
