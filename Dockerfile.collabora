@@ -1,26 +1,28 @@
-# Custom Collabora image: strips all default bundled fonts so only the
-# Hebrew fonts mounted into /usr/share/fonts/truetype/velr-hebrew/ are
-# visible in the editor's font picker.
-#
-# We keep Liberation Sans + Carlito alive because Collabora's UI text
-# itself renders with them — deleting those would break the toolbar
-# rendering, not just the document fonts.
+# Custom Collabora image:
+#   1. Strips all default bundled fonts so only ours appear in the picker.
+#   2. Bakes our custom fonts into /opt/cool/systemplate/ so the chroot-jailed
+#      "kit" rendering processes can actually see them — bind-mounting fonts
+#      into /usr/share/fonts/ at runtime puts them OUTSIDE the jail, which is
+#      why text disappears when those fonts are applied.
 FROM collabora/code:latest
 
 USER root
 
-RUN set -eux; \
-    # Remove every bundled .ttf/.otf except the ones the UI needs.
-    find /opt/collaboraoffice/share/fonts -type f \( -name '*.ttf' -o -name '*.otf' \) \
+# 1. Strip default bundled fonts (keep Liberation Sans + Carlito for UI chrome)
+RUN find /opt/collaboraoffice/share/fonts -type f \( -name '*.ttf' -o -name '*.otf' \) \
         ! -name 'LiberationSans-*' \
         ! -name 'Carlito-*' \
-        -delete; \
-    # The "common" fonts dir holds the opens___.ttf default — keep it,
-    # Collabora falls back to it for unknown glyphs.
-    # Wipe the DejaVu system fonts entirely.
-    rm -rf /usr/share/fonts/truetype/dejavu; \
-    # Refresh the font cache so the editor only advertises what's left
-    # plus whatever is mounted at runtime.
-    fc-cache -fv >/dev/null 2>&1 || true
+        -delete && \
+    rm -rf /usr/share/fonts/truetype/dejavu \
+           /opt/cool/systemplate/usr/share/fonts/truetype/dejavu
+
+# 2. Bake our fonts into the image AND into the systemplate so the jails see them
+COPY public/fonts/hebrew/  /usr/share/fonts/truetype/velr-hebrew/
+COPY public/fonts/english/ /usr/share/fonts/truetype/velr-english/
+COPY public/fonts/hebrew/  /opt/cool/systemplate/usr/share/fonts/truetype/velr-hebrew/
+COPY public/fonts/english/ /opt/cool/systemplate/usr/share/fonts/truetype/velr-english/
+
+# 3. Refresh fontconfig cache so the editor advertises the new set immediately
+RUN fc-cache -fv >/dev/null 2>&1 || true
 
 USER cool
