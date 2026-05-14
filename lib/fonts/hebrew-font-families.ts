@@ -124,5 +124,12 @@ export const HEBREW_FONT_FILE_TO_FAMILY: Record<string, string> = {
   "pft_sivan-webfont.ttf": "PFT_Sivan",
   "pft_stam-webfont.ttf": "PFT_Stam",
   "pft_vilna-webfont.ttf": "PFT_Vilna",
-  "pft_yrushalmi-webfont.ttf": "PFT_Yrushalmi"
+  "pft_yrushalmi-webfont.ttf": "PFT_Yrushalmi",
+  "ABCDEE+lubavittch770.ttf": "lubavittch770",
+  "FbwLivorna.otf": "FontbitLivorna",
+  "FbwLivornaBold.otf": "FontbitLivorna",
+  "LivornoBold.ttf": "NewLivornoMF",
+  "lvnm.ttf": "Levenim MT",
+  "lvnmbd.ttf": "Levenim MT",
+  "nrkis.ttf": "Narkisim"
 };

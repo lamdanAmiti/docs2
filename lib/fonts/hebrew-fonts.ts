@@ -24,6 +24,9 @@ export const HEBREW_FONTS: HebrewFont[] = [
   { name: 'Frank Ruehl', file: 'frank.ttf', collection: 'System', style: 'serif' },
   { name: 'Gisha', file: 'gisha.ttf', collection: 'System', style: 'sans' },
   { name: 'Gisha Bold', file: 'gishabd.ttf', weight: 700, collection: 'System', style: 'sans' },
+  { name: 'Levenim MT', file: 'lvnm.ttf', collection: 'System', style: 'sans' },
+  { name: 'Levenim MT Bold', file: 'lvnmbd.ttf', weight: 700, collection: 'System', style: 'sans' },
+  { name: 'Narkisim', file: 'nrkis.ttf', collection: 'System', style: 'serif' },
 
   // ─── FT (Fontbit/Hebrew Fonts) ───────────────────────────────────
   { name: 'FT David', file: 'FbwDavid.ttf', collection: 'FT', style: 'serif' },
@@ -31,7 +34,11 @@ export const HEBREW_FONTS: HebrewFont[] = [
   { name: 'FT Frank', file: 'FbFrankReal.ttf', collection: 'FT', style: 'serif' },
   { name: 'FT Frank Bold', file: 'FbFrankRealBold.ttf', weight: 700, collection: 'FT', style: 'serif' },
   { name: 'FT Frank Light', file: 'FbFrankRealLight.ttf', weight: 300, collection: 'FT', style: 'serif' },
+  { name: 'FT Livorna', file: 'FbwLivorna.otf', collection: 'FT', style: 'serif' },
+  { name: 'FT Livorna Bold', file: 'FbwLivornaBold.otf', weight: 700, collection: 'FT', style: 'serif' },
   { name: 'Miriam CLM', file: 'MiriamCLM-Book.ttf', collection: 'Other', style: 'serif' },
+  { name: 'Lubavitch 770', file: 'ABCDEE+lubavittch770.ttf', collection: 'Other', style: 'display' },
+  { name: 'Livorno Bold', file: 'LivornoBold.ttf', weight: 700, collection: 'Other', style: 'serif' },
 
   // ─── BAWS (your collection) ──────────────────────────────────────
   { name: 'BAWS Esthetic', file: 'BAWS-Esthetic-Regular.ttf', collection: 'BAWS', style: 'display' },
