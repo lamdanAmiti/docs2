@@ -30,11 +30,14 @@ function ensureGoogleFontLoaded(family: string, weights?: number[]) {
 
 const RECENT_KEY = 'velr-docs-recent-fonts';
 
+type ScriptFilter = 'hebrew' | 'english' | null;
+
 export function FontPicker({ currentFont, onPick }: Props) {
   const [open, setOpen] = useState(false);
-  const [hebrewOnly, setHebrewOnly] = useState(false);
+  const [scriptFilter, setScriptFilter] = useState<ScriptFilter>(null);
   const [query, setQuery] = useState('');
   const ref = useRef<HTMLDivElement>(null);
+  const scrollerRef = useRef<HTMLDivElement>(null);
   const [recentFonts, setRecentFonts] = useState<string[]>([]);
 
   // Restore recent fonts from localStorage on mount
@@ -59,6 +62,18 @@ export function FontPicker({ currentFont, onPick }: Props) {
     return () => window.removeEventListener('mousedown', onClick);
   }, [open]);
 
+  // When the picker opens, scroll the currently-selected font into view so
+  // the user lands on it instead of always at the top of the list.
+  useEffect(() => {
+    if (!open) return;
+    // Defer to next frame so the dropdown has actually rendered.
+    const id = requestAnimationFrame(() => {
+      const row = scrollerRef.current?.querySelector<HTMLElement>('[data-active="true"]');
+      row?.scrollIntoView({ block: 'center' });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [open, currentFont]);
+
   const sections = useMemo(() => {
     const q = query.trim().toLowerCase();
     const matches = (name: string) => !q || name.toLowerCase().includes(q);
@@ -81,9 +96,12 @@ export function FontPicker({ currentFont, onPick }: Props) {
     return { recent, localHebrew, hebrewGoogle, allOtherGoogle };
   }, [recentFonts, query]);
 
-  const visible = hebrewOnly
-    ? { ...sections, allOtherGoogle: [] }
-    : sections;
+  const visible =
+    scriptFilter === 'hebrew'
+      ? { ...sections, allOtherGoogle: [] }
+      : scriptFilter === 'english'
+        ? { ...sections, localHebrew: [], hebrewGoogle: [] }
+        : sections;
 
   const totalCount =
     visible.recent.length +
@@ -136,21 +154,37 @@ export function FontPicker({ currentFont, onPick }: Props) {
               placeholder="Search fonts…"
               className="flex-1 text-sm outline-none"
             />
-            <button
-              type="button"
-              onClick={() => setHebrewOnly((h) => !h)}
-              className={clsx('text-xs px-2 py-1 rounded-full border',
-                hebrewOnly
-                  ? 'bg-velr-chip text-velr-chip-text border-velr-chip'
-                  : 'border-velr-rule text-velr-subtle hover:bg-gray-50',
-              )}
-              title="Show only fonts with Hebrew glyphs"
-            >
-              עברית
-            </button>
+            <div className="flex items-center gap-1 shrink-0">
+              <button
+                type="button"
+                onClick={() => setScriptFilter((s) => (s === 'hebrew' ? null : 'hebrew'))}
+                className={clsx(
+                  'text-xs px-2 py-1 rounded-full border transition-colors',
+                  scriptFilter === 'hebrew'
+                    ? 'bg-velr-chip text-velr-chip-text border-velr-chip'
+                    : 'border-velr-rule text-velr-subtle hover:bg-gray-50',
+                )}
+                title="Show only Hebrew fonts"
+              >
+                עברית
+              </button>
+              <button
+                type="button"
+                onClick={() => setScriptFilter((s) => (s === 'english' ? null : 'english'))}
+                className={clsx(
+                  'text-xs px-2 py-1 rounded-full border transition-colors',
+                  scriptFilter === 'english'
+                    ? 'bg-velr-chip text-velr-chip-text border-velr-chip'
+                    : 'border-velr-rule text-velr-subtle hover:bg-gray-50',
+                )}
+                title="Show only English / Latin fonts"
+              >
+                En
+              </button>
+            </div>
           </div>
 
-          <div className="overflow-y-auto flex-1 py-1">
+          <div ref={scrollerRef} className="overflow-y-auto flex-1 py-1">
             {totalCount === 0 && (
               <div className="p-4 text-xs text-velr-subtle text-center">No matches.</div>
             )}
@@ -158,7 +192,7 @@ export function FontPicker({ currentFont, onPick }: Props) {
             {visible.recent.length > 0 && (
               <Group label="Recent">
                 {visible.recent.map((name) => (
-                  <Row key={`r:${name}`} name={name} active={name === currentFont} onPick={() => handleSelect(name, 'recent')} hebrew={isHebrewFont(name)} />
+                  <Row key={`r:${name}`} name={name} active={isActiveHebrew(name, currentFont) || name === currentFont} onPick={() => handleSelect(name, 'recent')} hebrew={isHebrewFont(name)} />
                 ))}
               </Group>
             )}
@@ -166,7 +200,7 @@ export function FontPicker({ currentFont, onPick }: Props) {
             {visible.localHebrew.map((g) => (
               <Group key={`lh:${g.label}`} label={g.label}>
                 {g.fonts.map((f) => (
-                  <Row key={`lh:${f.name}`} name={f.name} active={f.name === currentFont} onPick={() => handleSelect(f.name, 'local-hebrew')} hebrew />
+                  <Row key={`lh:${f.name}`} name={f.name} active={isActiveHebrew(f.name, currentFont)} onPick={() => handleSelect(f.name, 'local-hebrew')} hebrew />
                 ))}
               </Group>
             ))}
@@ -214,6 +248,7 @@ function Row({
   return (
     <button
       type="button"
+      data-active={active ? 'true' : undefined}
       onMouseEnter={() => {
         const gf = GOOGLE_FONTS.find((f) => f.family === name);
         if (gf) ensureGoogleFontLoaded(name, gf.weights);
@@ -241,4 +276,18 @@ function Row({
 function isHebrewFont(name: string): boolean {
   if (HEBREW_FONTS.some((f) => f.name === name)) return true;
   return GOOGLE_FONTS.some((f) => f.family === name && f.hebrew);
+}
+
+/**
+ * True if the row for a local Hebrew font (display name `displayName`)
+ * corresponds to the currently-applied internal family `currentFont`
+ * reported by Collabora. We map the row's file → real internal family and
+ * compare. Falls back to display-name match.
+ */
+function isActiveHebrew(displayName: string, currentFont: string): boolean {
+  if (!currentFont) return false;
+  if (displayName === currentFont) return true;
+  const entry = HEBREW_FONTS.find((f) => f.name === displayName);
+  if (!entry) return false;
+  return HEBREW_FONT_FILE_TO_FAMILY[entry.file] === currentFont;
 }

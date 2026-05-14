@@ -12,12 +12,20 @@ export interface HebrewFont {
   /** Font weight for @font-face. Most Hebrew display fonts are 400. */
   weight?: number;
   /** Foundry/collection grouping for sorting. */
-  collection: 'FT' | 'PFT' | 'EFT' | 'BAWS' | 'System' | 'Other';
+  collection: 'Seforim' | 'FT' | 'PFT' | 'EFT' | 'BAWS' | 'System' | 'Other';
   /** Style classification surfaced via tooltip. */
   style?: 'serif' | 'sans' | 'display' | 'script' | 'mono' | 'stam' | 'rashi';
 }
 
 export const HEBREW_FONTS: HebrewFont[] = [
+  // ─── Seforim (top group: short Hebrew-book-friendly names) ────────
+  { name: 'Frank',        file: 'pft_frank-webfont.ttf',        collection: 'Seforim', style: 'serif' },
+  { name: 'Vilna',        file: 'pft_vilna-webfont.ttf',        collection: 'Seforim', style: 'serif' },
+  { name: 'Lub770',       file: 'ABCDEE+lubavittch770.ttf',     collection: 'Seforim', style: 'display' },
+  { name: 'Ivri Classic', file: 'pft_ivric-webfont.ttf',        collection: 'Seforim', style: 'sans'   },
+  { name: 'Ivri Bold',    file: 'pft_ivri_bold-webfont.ttf', weight: 700, collection: 'Seforim', style: 'sans' },
+  { name: 'Meiri Rashi',  file: 'pft_meiri-webfont.ttf',        collection: 'Seforim', style: 'serif' },
+
   // ─── System (Windows) ─────────────────────────────────────────────
   { name: 'David', file: 'david.ttf', collection: 'System', style: 'serif' },
   { name: 'David Bold', file: 'davidbd.ttf', weight: 700, collection: 'System', style: 'serif' },
@@ -37,7 +45,6 @@ export const HEBREW_FONTS: HebrewFont[] = [
   { name: 'FT Livorna', file: 'FbwLivorna.otf', collection: 'FT', style: 'serif' },
   { name: 'FT Livorna Bold', file: 'FbwLivornaBold.otf', weight: 700, collection: 'FT', style: 'serif' },
   { name: 'Miriam CLM', file: 'MiriamCLM-Book.ttf', collection: 'Other', style: 'serif' },
-  { name: 'Lubavitch 770', file: 'ABCDEE+lubavittch770.ttf', collection: 'Other', style: 'display' },
   { name: 'Livorno Bold', file: 'LivornoBold.ttf', weight: 700, collection: 'Other', style: 'serif' },
 
   // ─── BAWS (your collection) ──────────────────────────────────────
@@ -142,18 +149,13 @@ export const HEBREW_FONTS: HebrewFont[] = [
   // ─── PFT ─────────────────────────────────────────────────────────
   { name: 'PFT David', file: 'pft_david-webfont.ttf', collection: 'PFT', style: 'serif' },
   { name: 'PFT Dor', file: 'pft_dor-webfont.ttf', collection: 'PFT', style: 'sans' },
-  { name: 'PFT Frank', file: 'pft_frank-webfont.ttf', collection: 'PFT', style: 'serif' },
   { name: 'PFT Hayim', file: 'pft_hayimn-webfont.ttf', collection: 'PFT', style: 'serif' },
   { name: 'PFT Ivri', file: 'pft_ivri-webfont.ttf', collection: 'PFT', style: 'sans' },
-  { name: 'PFT Ivri Classic', file: 'pft_ivric-webfont.ttf', collection: 'PFT', style: 'sans' },
-  { name: 'PFT Ivri Bold', file: 'pft_ivri_bold-webfont.ttf', weight: 700, collection: 'PFT', style: 'sans' },
   { name: 'PFT Ktav', file: 'pft_ktav-webfont.ttf', collection: 'PFT', style: 'script' },
-  { name: 'PFT Meiri', file: 'pft_meiri-webfont.ttf', collection: 'PFT', style: 'serif' },
   { name: 'PFT Ophir', file: 'pft_ophir-webfont.ttf', collection: 'PFT', style: 'sans' },
   { name: 'PFT Rashi', file: 'pft_rashi-webfont2.ttf', collection: 'PFT', style: 'rashi' },
   { name: 'PFT Sivan', file: 'pft_sivan-webfont.ttf', collection: 'PFT', style: 'display' },
   { name: 'PFT Stam', file: 'pft_stam-webfont.ttf', collection: 'PFT', style: 'stam' },
-  { name: 'PFT Vilna', file: 'pft_vilna-webfont.ttf', collection: 'PFT', style: 'serif' },
   { name: 'PFT Yerushalmi', file: 'pft_yrushalmi-webfont.ttf', collection: 'PFT', style: 'serif' },
 
   // ─── Other Hebrew ───────────────────────────────────────────────
@@ -170,9 +172,10 @@ export const HEBREW_FONTS_BY_NAME: ReadonlyMap<string, HebrewFont> = new Map(
 
 /** Returns ordered groups for the picker. */
 export function hebrewFontGroups(): { label: string; fonts: HebrewFont[] }[] {
-  const groups: Record<string, HebrewFont[]> = { System: [], FT: [], PFT: [], EFT: [], BAWS: [], Other: [] };
+  const groups: Record<string, HebrewFont[]> = { Seforim: [], System: [], FT: [], PFT: [], EFT: [], BAWS: [], Other: [] };
   for (const f of HEBREW_FONTS) groups[f.collection].push(f);
   return [
+    { label: 'Seforim', fonts: groups.Seforim },
     { label: 'System Hebrew', fonts: groups.System },
     { label: 'FT Family', fonts: groups.FT },
     { label: 'PFT Family', fonts: groups.PFT },
