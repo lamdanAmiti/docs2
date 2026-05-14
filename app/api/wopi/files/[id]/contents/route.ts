@@ -10,7 +10,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   if (!info) return new NextResponse('Unauthorized', { status: 401 });
 
   const bytes = await readDocBytes(info.document.storage_path);
-  return new NextResponse(bytes, {
+  return new NextResponse(new Blob([new Uint8Array(bytes)]), {
     status: 200,
     headers: {
       'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',

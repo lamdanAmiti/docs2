@@ -1,24 +1,37 @@
 import { createClient } from '@supabase/supabase-js';
 
-const SUPABASE_URL = process.env.SUPABASE_URL!;
-const SERVICE_KEY  = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+let _root: any = null;
+let _dbClient: any = null;
 
-if (!SUPABASE_URL || !SERVICE_KEY) {
-  throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
+function rootClient(): any {
+  if (_root) return _root;
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
+  _root = createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } });
+  return _root;
+}
+
+function dbClient(): any {
+  if (_dbClient) return _dbClient;
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
+  _dbClient = createClient(url, key, {
+    auth: { autoRefreshToken: false, persistSession: false },
+    db: { schema: 'docs' },
+  });
+  return _dbClient;
 }
 
 /**
- * Service-role Supabase client scoped to the `docs` schema.
- * Used server-side only — never expose this to the browser.
+ * Service-role Supabase client scoped to the `docs` schema. Lazy — clients
+ * only initialize on first property access, so import-time `next build`
+ * code paths don't trip on missing env vars.
  */
-export const db = createClient(SUPABASE_URL, SERVICE_KEY, {
-  auth: { autoRefreshToken: false, persistSession: false },
-  db:   { schema: 'docs' },
-});
+export const db: any = new Proxy({}, { get(_t, prop) { return dbClient()[prop]; } });
 
-/**
- * Service-role Supabase client for Storage operations on the `docs-files` bucket.
- */
-export const storage = createClient(SUPABASE_URL, SERVICE_KEY, {
-  auth: { autoRefreshToken: false, persistSession: false },
-}).storage.from('docs-files');
+/** Storage operations on the private `docs-files` bucket. */
+export const storage: any = new Proxy({}, {
+  get(_t, prop) { return rootClient().storage.from('docs-files')[prop]; },
+});
