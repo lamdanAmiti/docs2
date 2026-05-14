@@ -34,7 +34,7 @@ function buildMenus(commands: CollaboraCommands, active: ActiveState): Menu[] {
         'sep',
         { label: 'Properties…',  onClick: () => uno('.uno:SetDocumentProperties') },
         { label: 'Page setup…',  onClick: () => uno('.uno:PageDialog') },
-        { label: 'Print',        shortcut: 'Ctrl+P',  onClick: () => uno('.uno:Print') },
+        { label: 'Print',        shortcut: 'Ctrl+P',  onClick: commands.print },
         'sep',
         { label: 'Close',        shortcut: 'Ctrl+W',  onClick: () => window.location.assign('/home') },
       ],

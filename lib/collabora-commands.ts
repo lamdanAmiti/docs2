@@ -87,6 +87,8 @@ export interface CollaboraCommands {
   zoomIn:  () => void;
   zoomOut: () => void;
   /** Open a file picker and insert the chosen image at the caret. */
+  /** Trigger Collabora's print flow (server-side PDF → browser print dialog). */
+  print: () => void;
   insertImage: () => Promise<void>;
   /** Begin drawing a horizontal text frame (click+drag on canvas). */
   insertTextBox: () => void;
@@ -276,6 +278,13 @@ function buildCommands(getIframe: () => HTMLIFrameElement | null): CollaboraComm
       const map = (getIframe()?.contentWindow as any)?.app?.map;
       if (map?.zoomOut) { try { map.zoomOut(); return; } catch {} }
       direct('.uno:ZoomMinus');
+    },
+    print: () => {
+      const map = (getIframe()?.contentWindow as any)?.app?.map;
+      if (map?.print) {
+        try { map.print(); return; } catch {}
+      }
+      direct('.uno:PrintDefault');
     },
     insertImage: async () => {
       const iframe = getIframe();
@@ -539,12 +548,7 @@ export function useCollaboraCommands(iframeRef: React.RefObject<HTMLIFrameElemen
       // dialog. The `.uno:Print` UNO is a no-op in browser context.
       if (key === 'p') {
         ev.preventDefault(); ev.stopPropagation();
-        const map = (iframe?.contentWindow as any)?.app?.map;
-        if (map?.print) {
-          try { map.print(); return; } catch {}
-        }
-        // Fallback: try the dialog UNOs that Collabora wires up itself.
-        cmds.uno('.uno:PrintDefault');
+        cmds.print();
         return;
       }
       // Zoom — note that '=' is Shift+=
