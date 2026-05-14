@@ -57,6 +57,13 @@ services:
       - "traefik.http.routers.docsapi.tls.certresolver=letsencrypt"
       - "traefik.http.services.docsapi.loadbalancer.server.port=9980"
       - "traefik.docker.network=coolify"
+      # Allow Collabora itself to write to / read from the system clipboard
+      # when embedded in an iframe at docs.velr.app. Without these headers
+      # on the iframe origin, Chrome blocks Collabora's navigator.clipboard
+      # calls — so Ctrl+C inside a doc never lands in the OS clipboard and
+      # paste anywhere else gets nothing.
+      - "traefik.http.middlewares.collabora-clipboard.headers.customresponseheaders.Permissions-Policy=clipboard-read=(self \"https://docs.velr.app\"), clipboard-write=(self \"https://docs.velr.app\")"
+      - "traefik.http.routers.docsapi.middlewares=collabora-clipboard@docker"
     networks:
       - coolify
 
