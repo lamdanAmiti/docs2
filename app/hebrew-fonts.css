@@ -1,4 +1,58 @@
 @font-face {
+  font-family: "Frank";
+  src: url("/fonts/hebrew/pft_frank-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "Vilna";
+  src: url("/fonts/hebrew/pft_vilna-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "Lub770";
+  src: url("/fonts/hebrew/ABCDEE%2Blubavittch770.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "Ivri Classic";
+  src: url("/fonts/hebrew/pft_ivric-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "Ivri Bold";
+  src: url("/fonts/hebrew/pft_ivri_bold-webfont.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "Meiri";
+  src: url("/fonts/hebrew/pft_meiri-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
   font-family: "David";
   src: url("/fonts/hebrew/david.ttf") format("truetype");
   font-weight: 400;
@@ -38,6 +92,33 @@
   font-family: "Gisha Bold";
   src: url("/fonts/hebrew/gishabd.ttf") format("truetype");
   font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "Levenim MT";
+  src: url("/fonts/hebrew/lvnm.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "Levenim MT Bold";
+  src: url("/fonts/hebrew/lvnmbd.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "Narkisim";
+  src: url("/fonts/hebrew/nrkis.ttf") format("truetype");
+  font-weight: 400;
   font-style: normal;
   font-display: swap;
   unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
@@ -89,9 +170,36 @@
 }
 
 @font-face {
+  font-family: "FT Livorna";
+  src: url("/fonts/hebrew/FbwLivorna.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "FT Livorna Bold";
+  src: url("/fonts/hebrew/FbwLivornaBold.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
   font-family: "Miriam CLM";
   src: url("/fonts/hebrew/MiriamCLM-Book.ttf") format("truetype");
   font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "Livorno Bold";
+  src: url("/fonts/hebrew/LivornoBold.ttf") format("truetype");
+  font-weight: 700;
   font-style: normal;
   font-display: swap;
   unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
@@ -971,15 +1079,6 @@
 }
 
 @font-face {
-  font-family: "PFT Frank";
-  src: url("/fonts/hebrew/pft_frank-webfont.ttf") format("truetype");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
-}
-
-@font-face {
   font-family: "PFT Hayim";
   src: url("/fonts/hebrew/pft_hayimn-webfont.ttf") format("truetype");
   font-weight: 400;
@@ -998,35 +1097,8 @@
 }
 
 @font-face {
-  font-family: "PFT Ivri Classic";
-  src: url("/fonts/hebrew/pft_ivric-webfont.ttf") format("truetype");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
-}
-
-@font-face {
-  font-family: "PFT Ivri Bold";
-  src: url("/fonts/hebrew/pft_ivri_bold-webfont.ttf") format("truetype");
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
-}
-
-@font-face {
   font-family: "PFT Ktav";
   src: url("/fonts/hebrew/pft_ktav-webfont.ttf") format("truetype");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
-}
-
-@font-face {
-  font-family: "PFT Meiri";
-  src: url("/fonts/hebrew/pft_meiri-webfont.ttf") format("truetype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -1063,15 +1135,6 @@
 @font-face {
   font-family: "PFT Stam";
   src: url("/fonts/hebrew/pft_stam-webfont.ttf") format("truetype");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
-}
-
-@font-face {
-  font-family: "PFT Vilna";
-  src: url("/fonts/hebrew/pft_vilna-webfont.ttf") format("truetype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;

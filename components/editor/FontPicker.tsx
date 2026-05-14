@@ -30,11 +30,11 @@ function ensureGoogleFontLoaded(family: string, weights?: number[]) {
 
 const RECENT_KEY = 'velr-docs-recent-fonts';
 
-type ScriptFilter = 'hebrew' | 'english' | null;
+type ScriptFilter = 'hebrew' | 'english';
 
 export function FontPicker({ currentFont, onPick }: Props) {
   const [open, setOpen] = useState(false);
-  const [scriptFilter, setScriptFilter] = useState<ScriptFilter>(null);
+  const [scriptFilter, setScriptFilter] = useState<ScriptFilter>('hebrew');
   const [query, setQuery] = useState('');
   const ref = useRef<HTMLDivElement>(null);
   const scrollerRef = useRef<HTMLDivElement>(null);
@@ -99,9 +99,7 @@ export function FontPicker({ currentFont, onPick }: Props) {
   const visible =
     scriptFilter === 'hebrew'
       ? { ...sections, allOtherGoogle: [] }
-      : scriptFilter === 'english'
-        ? { ...sections, localHebrew: [], hebrewGoogle: [] }
-        : sections;
+      : { ...sections, localHebrew: [], hebrewGoogle: [] };
 
   const totalCount =
     visible.recent.length +
@@ -154,30 +152,38 @@ export function FontPicker({ currentFont, onPick }: Props) {
               placeholder="Search fonts…"
               className="flex-1 text-sm outline-none"
             />
-            <div className="flex items-center gap-1 shrink-0">
+            <div
+              role="tablist"
+              aria-label="Script filter"
+              className="flex items-center shrink-0 rounded-full border border-velr-rule overflow-hidden text-xs"
+            >
               <button
                 type="button"
-                onClick={() => setScriptFilter((s) => (s === 'hebrew' ? null : 'hebrew'))}
+                role="tab"
+                aria-selected={scriptFilter === 'hebrew'}
+                onClick={() => setScriptFilter('hebrew')}
                 className={clsx(
-                  'text-xs px-2 py-1 rounded-full border transition-colors',
+                  'px-2.5 py-1 transition-colors',
                   scriptFilter === 'hebrew'
-                    ? 'bg-velr-chip text-velr-chip-text border-velr-chip'
-                    : 'border-velr-rule text-velr-subtle hover:bg-gray-50',
+                    ? 'bg-velr-chip text-velr-chip-text'
+                    : 'text-velr-subtle hover:bg-gray-50',
                 )}
-                title="Show only Hebrew fonts"
+                title="Show Hebrew fonts"
               >
                 עברית
               </button>
               <button
                 type="button"
-                onClick={() => setScriptFilter((s) => (s === 'english' ? null : 'english'))}
+                role="tab"
+                aria-selected={scriptFilter === 'english'}
+                onClick={() => setScriptFilter('english')}
                 className={clsx(
-                  'text-xs px-2 py-1 rounded-full border transition-colors',
+                  'px-2.5 py-1 border-l border-velr-rule transition-colors',
                   scriptFilter === 'english'
-                    ? 'bg-velr-chip text-velr-chip-text border-velr-chip'
-                    : 'border-velr-rule text-velr-subtle hover:bg-gray-50',
+                    ? 'bg-velr-chip text-velr-chip-text'
+                    : 'text-velr-subtle hover:bg-gray-50',
                 )}
-                title="Show only English / Latin fonts"
+                title="Show English / Latin fonts"
               >
                 En
               </button>

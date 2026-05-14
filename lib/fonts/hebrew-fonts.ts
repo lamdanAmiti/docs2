@@ -24,7 +24,7 @@ export const HEBREW_FONTS: HebrewFont[] = [
   { name: 'Lub770',       file: 'ABCDEE+lubavittch770.ttf',     collection: 'Seforim', style: 'display' },
   { name: 'Ivri Classic', file: 'pft_ivric-webfont.ttf',        collection: 'Seforim', style: 'sans'   },
   { name: 'Ivri Bold',    file: 'pft_ivri_bold-webfont.ttf', weight: 700, collection: 'Seforim', style: 'sans' },
-  { name: 'Meiri Rashi',  file: 'pft_meiri-webfont.ttf',        collection: 'Seforim', style: 'serif' },
+  { name: 'Meiri',        file: 'pft_meiri-webfont.ttf',        collection: 'Seforim', style: 'serif' },
 
   // ─── System (Windows) ─────────────────────────────────────────────
   { name: 'David', file: 'david.ttf', collection: 'System', style: 'serif' },
