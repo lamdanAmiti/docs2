@@ -58,8 +58,16 @@ export function FontPicker({ currentFont, onPick }: Props) {
     const onClick = (e: MouseEvent) => {
       if (!ref.current?.contains(e.target as Node)) setOpen(false);
     };
+    // Clicks inside the Collabora iframe never reach this window's
+    // mousedown handler. The hook in lib/collabora-commands.ts re-broadcasts
+    // them as 'velr-canvas-mousedown' so we can dismiss alongside.
+    const onCanvas = () => setOpen(false);
     window.addEventListener('mousedown', onClick);
-    return () => window.removeEventListener('mousedown', onClick);
+    window.addEventListener('velr-canvas-mousedown', onCanvas);
+    return () => {
+      window.removeEventListener('mousedown', onClick);
+      window.removeEventListener('velr-canvas-mousedown', onCanvas);
+    };
   }, [open]);
 
   // When the picker opens, scroll the currently-selected font into view so

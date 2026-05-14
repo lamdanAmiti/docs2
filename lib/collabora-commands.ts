@@ -562,14 +562,34 @@ export function useCollaboraCommands(iframeRef: React.RefObject<HTMLIFrameElemen
     }
     // Capture phase so we beat the browser's default for Ctrl+Shift+R, etc.
     window.addEventListener('keydown', onKeyDown, true);
+
+    // Re-broadcast iframe canvas clicks as a parent-window CustomEvent so
+    // toolbar dropdowns (font picker, color pickers, menus) can dismiss
+    // themselves — their own document-level mousedown handlers never see
+    // events that happen inside the iframe.
+    function onIframeMouseDown() {
+      try {
+        window.dispatchEvent(new CustomEvent('velr-canvas-mousedown'));
+        // Also synthesize a parent-side mousedown so the seven Toolbar /
+        // MenuBar dropdowns that listen on `window.mousedown` for click-
+        // outside dismissal close naturally — target is document.body so
+        // every panel's ref.contains() check returns false.
+        document.body.dispatchEvent(
+          new MouseEvent('mousedown', { bubbles: true, cancelable: true }),
+        );
+      } catch {}
+    }
+
     let docKeyAttached: Document | null = null;
     function attachDocListener() {
       const doc = iframe?.contentDocument;
       if (!doc || doc === docKeyAttached) return;
       docKeyAttached?.removeEventListener('keydown', onKeyDown, true);
       docKeyAttached?.removeEventListener('keypress', onKeyPress, true);
+      docKeyAttached?.removeEventListener('mousedown', onIframeMouseDown, true);
       doc.addEventListener('keydown', onKeyDown, true);
       doc.addEventListener('keypress', onKeyPress, true);
+      doc.addEventListener('mousedown', onIframeMouseDown, true);
       docKeyAttached = doc;
     }
     attachDocListener();
@@ -580,6 +600,7 @@ export function useCollaboraCommands(iframeRef: React.RefObject<HTMLIFrameElemen
       window.removeEventListener('keydown', onKeyDown, true);
       docKeyAttached?.removeEventListener('keydown', onKeyDown, true);
       docKeyAttached?.removeEventListener('keypress', onKeyPress, true);
+      docKeyAttached?.removeEventListener('mousedown', onIframeMouseDown, true);
       if (pollHandle != null) clearInterval(pollHandle);
       if (unsubscribe) unsubscribe();
     };
