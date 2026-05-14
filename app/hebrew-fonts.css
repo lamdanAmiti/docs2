@@ -1,0 +1,1097 @@
+@font-face {
+  font-family: "David";
+  src: url("/fonts/hebrew/david.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "David Bold";
+  src: url("/fonts/hebrew/davidbd.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "Frank Ruehl";
+  src: url("/fonts/hebrew/frank.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "Gisha";
+  src: url("/fonts/hebrew/gisha.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "Gisha Bold";
+  src: url("/fonts/hebrew/gishabd.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "FT David";
+  src: url("/fonts/hebrew/FbwDavid.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "FT David Bold";
+  src: url("/fonts/hebrew/FbwDavidBold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "FT Frank";
+  src: url("/fonts/hebrew/FbFrankReal.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "FT Frank Bold";
+  src: url("/fonts/hebrew/FbFrankRealBold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "FT Frank Light";
+  src: url("/fonts/hebrew/FbFrankRealLight.ttf") format("truetype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "Miriam CLM";
+  src: url("/fonts/hebrew/MiriamCLM-Book.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "BAWS Esthetic";
+  src: url("/fonts/hebrew/BAWS-Esthetic-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "BAWS Esthetic Bold";
+  src: url("/fonts/hebrew/BAWS-Esthetic-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "BAWS Esthetic Decor";
+  src: url("/fonts/hebrew/BAWS-Esthetic-Decor.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "BAWS Esthetic Light";
+  src: url("/fonts/hebrew/BAWS-Esthetic-Light.ttf") format("truetype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "BAWS HaYetzira Decor";
+  src: url("/fonts/hebrew/BAWS-HaYetzira-Decor.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "BAWS HaYetzira Rolltext";
+  src: url("/fonts/hebrew/BAWS-HaYetzira-Rolltext.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "BAWS HaYetzira Rolltext II";
+  src: url("/fonts/hebrew/BAWS-HaYetzira-Rolltext-II.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "BAWS Nostalgia";
+  src: url("/fonts/hebrew/BAWS-Nostalgia-Old.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "BAWS Yoel Bold";
+  src: url("/fonts/hebrew/BAWS-Yoel-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "BAWS Campeiner";
+  src: url("/fonts/hebrew/BAWSCampeiner-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Atara";
+  src: url("/fonts/hebrew/eft_atara-webfont1.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Avukado";
+  src: url("/fonts/hebrew/eft_avukado-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Classic";
+  src: url("/fonts/hebrew/EFT_Classic%20OTS.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Frankfurt";
+  src: url("/fonts/hebrew/AnyConv.com__eft_frankfurt-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Graphologya";
+  src: url("/fonts/hebrew/EFT_Graphologya.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT HaHozvim";
+  src: url("/fonts/hebrew/eft_hahozvimwebfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Hebrew";
+  src: url("/fonts/hebrew/eft_hebrewwebfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Hipstar";
+  src: url("/fonts/hebrew/eft_hipstar_ot-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Ice Coffee";
+  src: url("/fonts/hebrew/eft_icecoffie-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Judaica";
+  src: url("/fonts/hebrew/eft_judaicaotswebfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Kdilak Sans";
+  src: url("/fonts/hebrew/eft_kdilak_sans-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Kitabet";
+  src: url("/fonts/hebrew/eft_kitabet-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Kita Alef";
+  src: url("/fonts/hebrew/eft_kita_alef-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Kiyosk Heavy";
+  src: url("/fonts/hebrew/eft_kiyosk_heavy_ot-webfont.ttf") format("truetype");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Kroason";
+  src: url("/fonts/hebrew/eft_kroasonwebfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Kulmus";
+  src: url("/fonts/hebrew/eft_kulmuswebfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Labirint";
+  src: url("/fonts/hebrew/eft_labirintwebfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Legioner";
+  src: url("/fonts/hebrew/eft_legioner-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Lemonade";
+  src: url("/fonts/hebrew/eft_lemonade-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Lituf";
+  src: url("/fonts/hebrew/eft_litufwebfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Maple";
+  src: url("/fonts/hebrew/eft_maplewebfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Marshmallow";
+  src: url("/fonts/hebrew/eft_marshmelo-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Mashat";
+  src: url("/fonts/hebrew/eft_mashat-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Matcon";
+  src: url("/fonts/hebrew/eft_matcon-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Mesora";
+  src: url("/fonts/hebrew/eft_mesora-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Miriam Elagean";
+  src: url("/fonts/hebrew/eft_miriam_elagean-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Nefesh";
+  src: url("/fonts/hebrew/eft_nefesh-webfont_Liran.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Neon";
+  src: url("/fonts/hebrew/eft_neon_full-webfont1.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Netsach Neria";
+  src: url("/fonts/hebrew/eft_netsach_neria-webfont1.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Newletter Elegant";
+  src: url("/fonts/hebrew/eft_newletter_elegant-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Noyvirt Peleot";
+  src: url("/fonts/hebrew/eft_noyvirt_peleot-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Office";
+  src: url("/fonts/hebrew/eft_office-webfont_Liran.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Offset";
+  src: url("/fonts/hebrew/eft_offset-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Ole Hadash";
+  src: url("/fonts/hebrew/eft_olehadashwebfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Paalul";
+  src: url("/fonts/hebrew/eft_paalul-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Paamonim";
+  src: url("/fonts/hebrew/eft_paamonim_otswebfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Pascal";
+  src: url("/fonts/hebrew/eft_pascal-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Patient";
+  src: url("/fonts/hebrew/eft_patientwebfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Patpetet";
+  src: url("/fonts/hebrew/eft_patpetet-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Pegasus";
+  src: url("/fonts/hebrew/eft_pegasus-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Pilpel Harif";
+  src: url("/fonts/hebrew/eft_pilpelharif-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Pilpilon";
+  src: url("/fonts/hebrew/eft_pilpilon-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Plastica";
+  src: url("/fonts/hebrew/eft_plastica-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Pnina";
+  src: url("/fonts/hebrew/eft_pnina-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Pnina Decor";
+  src: url("/fonts/hebrew/eft_pnina_decor-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Prehistoric";
+  src: url("/fonts/hebrew/eft_prehistoric-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Primaries";
+  src: url("/fonts/hebrew/eft_primaries-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Progtext Gold";
+  src: url("/fonts/hebrew/eft_progtextgold-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Raashan";
+  src: url("/fonts/hebrew/eft_raashanwebfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Rashi";
+  src: url("/fonts/hebrew/eft_rashi_ot-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Regga";
+  src: url("/fonts/hebrew/eft_regga-webfont2.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Resisim";
+  src: url("/fonts/hebrew/eft_resisimwebfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Sabress";
+  src: url("/fonts/hebrew/eft_sabress-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Shaarey Zedek";
+  src: url("/fonts/hebrew/eft_shaareyzedek_ot-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Shaashuim";
+  src: url("/fonts/hebrew/eft_shaashuim_ot-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Sharvit";
+  src: url("/fonts/hebrew/eft_sharvit-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Shifnuk";
+  src: url("/fonts/hebrew/eft_shifnuk-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Shukon";
+  src: url("/fonts/hebrew/eft_shukon-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Sicumim";
+  src: url("/fonts/hebrew/eft_sicumim-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Sifrut Open";
+  src: url("/fonts/hebrew/eft_sifrut_open_otpwebfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Sifrut";
+  src: url("/fonts/hebrew/eft_sifrut_otpwebfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Sinai Mitki";
+  src: url("/fonts/hebrew/eft_sinaimitkiwebfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Skup";
+  src: url("/fonts/hebrew/eft_skup-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Stam Ari";
+  src: url("/fonts/hebrew/eft_stam_ari-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Stam Beit Yosef";
+  src: url("/fonts/hebrew/eft_stam_beityosef-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Stam Sfaradi";
+  src: url("/fonts/hebrew/eft_stam_sfaradi-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Stam Sfaradi (no tag)";
+  src: url("/fonts/hebrew/eft_stamsf_aradi_notag-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Studentit";
+  src: url("/fonts/hebrew/eft_studentit-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Sufat Alim";
+  src: url("/fonts/hebrew/eft_sufatalim-webfont3.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Talpiot Class";
+  src: url("/fonts/hebrew/eft_talpiot_class_regwebfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Talpiot";
+  src: url("/fonts/hebrew/eft_talpiot_regwebfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Tamar";
+  src: url("/fonts/hebrew/eft_tamar-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Tehilot";
+  src: url("/fonts/hebrew/EFT_Tehilot-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Telescope";
+  src: url("/fonts/hebrew/eft_telescope-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Termus";
+  src: url("/fonts/hebrew/eft_termus_ot-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Textina";
+  src: url("/fonts/hebrew/eft_textina-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Textural";
+  src: url("/fonts/hebrew/eft_textural-webfont-1.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Tirosh";
+  src: url("/fonts/hebrew/eft_tirosh_ot-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Tsafon";
+  src: url("/fonts/hebrew/eft_tsafon-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Turbo";
+  src: url("/fonts/hebrew/eft_turbo_ot-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Yesodot Eitanim";
+  src: url("/fonts/hebrew/eft_yesodoteitanim-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Zarbuvit";
+  src: url("/fonts/hebrew/eft_zarbuvit-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Zarka";
+  src: url("/fonts/hebrew/eft_zarka-webfont-1.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Zecharya";
+  src: url("/fonts/hebrew/eft_zecharya-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "EFT Zrima";
+  src: url("/fonts/hebrew/eft_zrima-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "PFT David";
+  src: url("/fonts/hebrew/pft_david-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "PFT Dor";
+  src: url("/fonts/hebrew/pft_dor-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "PFT Frank";
+  src: url("/fonts/hebrew/pft_frank-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "PFT Hayim";
+  src: url("/fonts/hebrew/pft_hayimn-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "PFT Ivri";
+  src: url("/fonts/hebrew/pft_ivri-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "PFT Ivri Classic";
+  src: url("/fonts/hebrew/pft_ivric-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "PFT Ivri Bold";
+  src: url("/fonts/hebrew/pft_ivri_bold-webfont.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "PFT Ktav";
+  src: url("/fonts/hebrew/pft_ktav-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "PFT Meiri";
+  src: url("/fonts/hebrew/pft_meiri-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "PFT Ophir";
+  src: url("/fonts/hebrew/pft_ophir-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "PFT Rashi";
+  src: url("/fonts/hebrew/pft_rashi-webfont2.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "PFT Sivan";
+  src: url("/fonts/hebrew/pft_sivan-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "PFT Stam";
+  src: url("/fonts/hebrew/pft_stam-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "PFT Vilna";
+  src: url("/fonts/hebrew/pft_vilna-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "PFT Yerushalmi";
+  src: url("/fonts/hebrew/pft_yrushalmi-webfont.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}
+
+@font-face {
+  font-family: "Ravenda";
+  src: url("/fonts/hebrew/885f1e14-4070-4fdb-b7f2-9e446c5942d3_ravendafree.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+0020-007F;
+}

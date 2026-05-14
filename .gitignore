@@ -1,0 +1,11 @@
+node_modules
+.next
+out
+.env*.local
+*.log
+.DS_Store
+.vscode
+.idea
+public/fonts/hebrew/*.ttf
+public/fonts/hebrew/*.otf
+!public/fonts/hebrew/.gitkeep

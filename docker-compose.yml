@@ -1,0 +1,63 @@
+services:
+  # ─── Velr Docs (Next.js) — docs.velr.app ─────────────────────────────────
+  docs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: docs-velr
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - SESSION_SECRET=${SESSION_SECRET}
+      - NEXT_PUBLIC_APP_URL=https://docs.velr.app
+      - NEXT_PUBLIC_COLLABORA_URL=https://docsapi.velr.app
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.docs.rule=Host(`docs.velr.app`)"
+      - "traefik.http.routers.docs.entrypoints=https"
+      - "traefik.http.routers.docs.tls=true"
+      - "traefik.http.routers.docs.tls.certresolver=letsencrypt"
+      - "traefik.http.services.docs.loadbalancer.server.port=3000"
+      - "traefik.docker.network=coolify"
+    networks:
+      - coolify
+      - supabase
+
+  # ─── Collabora Online (rebranded "Velr Docs" backend) — docsapi.velr.app ─
+  collabora:
+    image: collabora/code:latest
+    container_name: docsapi-collabora
+    restart: unless-stopped
+    cap_add:
+      - MKNOD
+    environment:
+      # Allow our app at docs.velr.app to embed Collabora.
+      # NOTE: aliasgroup uses regex; dots escaped with single backslash.
+      - aliasgroup1=https://docs\.velr\.app:443
+      - server_name=docsapi.velr.app
+      - username=${COLLABORA_ADMIN_USER}
+      - password=${COLLABORA_ADMIN_PASSWORD}
+      - dictionaries=en_US
+      - extra_params=--o:ssl.enable=false --o:ssl.termination=true --o:welcome.enable=false --o:net.proto=IPv4
+      - DONT_GEN_SSL_CERT=1
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.docsapi.rule=Host(`docsapi.velr.app`)"
+      - "traefik.http.routers.docsapi.entrypoints=https"
+      - "traefik.http.routers.docsapi.tls=true"
+      - "traefik.http.routers.docsapi.tls.certresolver=letsencrypt"
+      - "traefik.http.services.docsapi.loadbalancer.server.port=9980"
+      - "traefik.docker.network=coolify"
+    networks:
+      - coolify
+
+networks:
+  coolify:
+    external: true
+  # Supabase's docker network — lets the Next.js container reach supabase-kong directly
+  # if you want to bypass the public hostname. Optional.
+  supabase:
+    external: true
+    name: n08wow4o0gs8kocc4cw8k4g0
