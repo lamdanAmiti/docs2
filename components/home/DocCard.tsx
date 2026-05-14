@@ -38,8 +38,14 @@ export function DocCard({
         {/* Paper preview — the thumbnail sits inside the card as a floating
             page (small inset + ring + drop shadow) so it reads as a real
             document, not a flat poster. */}
-        <div className="aspect-[8.5/11] bg-velr-canvas border-b border-velr-rule relative overflow-hidden p-3">
-          <div className="relative w-full h-full bg-white rounded-sm ring-1 ring-black/[0.06] shadow-[0_2px_6px_rgba(15,23,42,0.08),0_12px_28px_-8px_rgba(15,23,42,0.18)] overflow-hidden">
+        <div
+          className="aspect-[8.5/11] border-b border-velr-rule relative overflow-hidden grid place-items-center px-6 pt-6 pb-3"
+          style={{
+            background:
+              'linear-gradient(180deg, #eef1f6 0%, #e6eaf1 60%, #dee3ec 100%)',
+          }}
+        >
+          <div className="relative w-[78%] aspect-[8.5/11] bg-white rounded-[3px] ring-1 ring-black/[0.07] shadow-[0_1px_2px_rgba(15,23,42,0.06),0_8px_20px_-6px_rgba(15,23,42,0.22)] overflow-hidden">
             {doc.thumbnail_url ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
