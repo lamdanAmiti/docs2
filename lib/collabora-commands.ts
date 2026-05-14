@@ -172,7 +172,13 @@ const STRIPPED_CHROME_CSS = `
   #format-popup,
   #formattingpopupmenu,
   .action-button-bubble,
-  .selection-popup { display: none !important; }
+  .selection-popup,
+  /* w2ui overlays — Collabora uses these for tooltips AND for the floating
+     selection mini-toolbar. Hiding the overlay container kills both. The
+     real top-toolbar tooltips come from native HTML `title` attributes, not
+     from w2ui, so this is safe. */
+  .w2ui-tooltip,
+  .w2ui-overlay { display: none !important; }
 
   /* Sidebar reveal on demand */
   body.velr-show-sidebar #sidebar-panel,
@@ -543,37 +549,25 @@ export function useCollaboraCommands(iframeRef: React.RefObject<HTMLIFrameElemen
         if (FEEDBACK_RE.test(t)) el.remove();
       });
 
-      // (2) selection mini-toolbar — wide net of selectors and a broad
-      //     detector for any formatting-shaped button inside.
+      // (2) text-selection mini-toolbar. We must NOT match frame/text-box
+      //     selection handles — those popups have Align/Indent/Wrap buttons
+      //     that would false-trigger a wider regex and break the user's
+      //     ability to edit text-box shapes. The text-selection popup is
+      //     defined by having BOTH a Bold AND a Font button.
       const formattingPopups = doc.querySelectorAll<HTMLElement>(
         '.leaflet-popup, .lokdialog, .lokdialog_container, ' +
-          '[class*="popup"], [class*="toolbox"], [class*="floating"], ' +
-          '[class*="floatingtoolbar"], [class*="float-toolbar"], ' +
-          '[class*="toolbar"][class*="float"], [class*="context-menu"], ' +
           '[class*="mini-toolbar"], [class*="MiniToolbar"], ' +
-          '[class*="editor-toolbox"], [class*="selection-toolbar"], ' +
-          '[role="toolbar"]'
+          '[class*="editor-toolbox"], [class*="selection-toolbar"]'
       );
-      const FORMAT_RE = /(bold|italic|underline|strike|font|size|color|align|highlight|background|sub.?script|super.?script|list|bullet|number|indent|link)/i;
       formattingPopups.forEach((el) => {
-        // Skip our own top toolbar — but it lives in the parent doc, so it
-        // doesn't appear in iframe queries. Still, a defensive check.
         if (!iframe?.contentDocument?.contains(el)) return;
-        // Any button/anchor/select with a format-shaped title or aria-label
-        // means it's the formatting popup.
-        const controls = el.querySelectorAll<HTMLElement>(
-          'button, a, [role="button"], select, [title], [aria-label]'
+        const hasBold = el.querySelector(
+          '[title*="Bold" i], [aria-label*="Bold" i]'
         );
-        for (const c of controls) {
-          const label =
-            (c.getAttribute('title') ?? '') +
-            ' ' + (c.getAttribute('aria-label') ?? '') +
-            ' ' + (c.textContent ?? '');
-          if (FORMAT_RE.test(label)) {
-            el.remove();
-            return;
-          }
-        }
+        const hasFontControl = el.querySelector(
+          '[title*="Font" i], [aria-label*="Font" i], select[name*="font" i]'
+        );
+        if (hasBold && hasFontControl) el.remove();
       });
     }
 
