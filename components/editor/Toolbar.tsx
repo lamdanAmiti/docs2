@@ -184,12 +184,12 @@ export function Toolbar({ commands, active }: ToolbarProps) {
   );
 }
 
-/* ─── ZoomControl ────────────────────────────────────────────────────── */
+/* ─── ZoomControl: explicit − / value / + buttons + dropdown for presets ──── */
 function ZoomControl({ commands }: { commands: CollaboraCommands }) {
-  const [zoom, setZoom] = useState(1);
+  const [zoom, setZoom] = useState(100);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const presets = [0.5, 0.75, 0.9, 1, 1.25, 1.5, 2];
+  const presets = [50, 75, 90, 100, 125, 150, 175, 200];
 
   useEffect(() => {
     if (!open) return;
@@ -198,29 +198,71 @@ function ZoomControl({ commands }: { commands: CollaboraCommands }) {
     return () => window.removeEventListener('mousedown', onClick);
   }, [open]);
 
-  function applyZoom(p: number) {
-    setZoom(p);
-    const pct = Math.round(p * 100);
-    commands.uno('.uno:Zoom', { Zoom: { ValueSet: { type: 'long', value: 0 }, Type: { type: 'long', value: 0 }, Value: { type: 'long', value: pct } } });
+  function applyZoom(pct: number) {
+    const clamped = Math.max(20, Math.min(400, pct));
+    setZoom(clamped);
+    commands.uno('.uno:Zoom', {
+      Zoom: { type: 'long', value: clamped },
+    });
+  }
+
+  function bump(delta: number) {
+    const step = zoom < 100 ? 10 : 25;
+    applyZoom(zoom + delta * step);
   }
 
   return (
-    <div ref={ref} className="relative">
-      <button type="button" className="tb-btn min-w-[68px] gap-1" onClick={() => setOpen((o) => !o)} title="Zoom">
-        {Math.round(zoom * 100)}% <ChevronDown className="w-3 h-3 opacity-60" />
+    <div ref={ref} className="flex items-center">
+      <button
+        type="button"
+        className="tb-btn w-7 text-base"
+        onMouseDown={(e) => { e.preventDefault(); bump(-1); }}
+        title="Zoom out (Ctrl+−)"
+      >−</button>
+
+      <button
+        type="button"
+        className="tb-btn min-w-[64px] gap-1 justify-center"
+        onMouseDown={(e) => { e.preventDefault(); setOpen((o) => !o); }}
+        title="Zoom"
+      >
+        {zoom}% <ChevronDown className="w-3 h-3 opacity-60" />
       </button>
+
+      <button
+        type="button"
+        className="tb-btn w-7 text-base"
+        onMouseDown={(e) => { e.preventDefault(); bump(1); }}
+        title="Zoom in (Ctrl++)"
+      >+</button>
+
       {open && (
-        <div className="absolute left-0 top-full mt-1 z-50 w-[100px] bg-white border border-velr-rule rounded-lg shadow-lg py-1">
+        <div className="absolute left-0 top-full mt-1 z-50 w-[120px] bg-white border border-velr-rule rounded-lg shadow-lg py-1">
           {presets.map((p) => (
             <button
               key={p}
               type="button"
               onMouseDown={(e) => { e.preventDefault(); applyZoom(p); setOpen(false); }}
-              className={clsx('w-full text-left px-3 py-1 text-sm hover:bg-gray-50', Math.abs(p - zoom) < 0.01 && 'bg-velr-chip text-velr-chip-text')}
+              className={clsx('w-full text-left px-3 py-1 text-sm hover:bg-gray-50', p === zoom && 'bg-velr-chip text-velr-chip-text')}
             >
-              {Math.round(p * 100)}%
+              {p}%
             </button>
           ))}
+          <div className="h-px bg-velr-rule my-1" />
+          <button
+            type="button"
+            onMouseDown={(e) => { e.preventDefault(); commands.uno('.uno:FitPageWidth'); setOpen(false); }}
+            className="w-full text-left px-3 py-1 text-sm hover:bg-gray-50"
+          >
+            Fit page width
+          </button>
+          <button
+            type="button"
+            onMouseDown={(e) => { e.preventDefault(); commands.uno('.uno:FitPage'); setOpen(false); }}
+            className="w-full text-left px-3 py-1 text-sm hover:bg-gray-50"
+          >
+            Fit whole page
+          </button>
         </div>
       )}
     </div>

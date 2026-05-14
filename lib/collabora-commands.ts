@@ -341,13 +341,59 @@ export function useCollaboraCommands(iframeRef: React.RefObject<HTMLIFrameElemen
       (doc.head ?? doc.documentElement).appendChild(style);
     }
 
+    /** Force-hide a list of element ids/selectors in the iframe doc, by
+     *  setting display:none directly. Beats any inline style Collabora adds.
+     *  We re-run whenever the DOM changes (MutationObserver below) because
+     *  Collabora re-creates several of these elements after we hide them. */
+    const FORCE_HIDE = [
+      '#sidebar-panel', '.sidebar-panel', '#sidebar-dock-wrapper',
+      '#sidebar-container', '#PropertyDeck',
+      '#navigator-panel', '#navigator-dock-wrapper',
+      '#quickfind-panel', '#quickfind-dock-wrapper',
+      '#toolbar-wrapper', '#document-titlebar', '#main-menu', '.main-nav',
+      '#toolbar-up', '#toolbar-down', '#toolbar-row', '#toolbar-search',
+      '#formulabar', '#formulabar-row', '#tb_editbar',
+      '#presentation-toolbar', '#spreadsheet-toolbar',
+      '#presentation-controls-wrapper', '#mobile-edit-button',
+      '#userListHeader', '#userListSummary', '#followingChip',
+    ];
+    function hideAll(doc: Document, showSidebar: boolean) {
+      for (const sel of FORCE_HIDE) {
+        doc.querySelectorAll<HTMLElement>(sel).forEach((el) => {
+          const isSidebar = el.matches('#sidebar-panel, .sidebar-panel, #sidebar-dock-wrapper, #sidebar-container, #PropertyDeck');
+          if (isSidebar && showSidebar) {
+            el.style.removeProperty('display');
+          } else {
+            el.style.setProperty('display', 'none', 'important');
+          }
+        });
+      }
+    }
+    let observer: MutationObserver | null = null;
+    let observedDoc: Document | null = null;
+    function startObserver(doc: Document) {
+      if (observer && observedDoc === doc) return;
+      observer?.disconnect();
+      observedDoc = doc;
+      const showSidebar = doc.body?.classList.contains('velr-show-sidebar') ?? false;
+      hideAll(doc, showSidebar);
+      observer = new MutationObserver(() => {
+        const s = doc.body?.classList.contains('velr-show-sidebar') ?? false;
+        hideAll(doc, s);
+      });
+      observer.observe(doc.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'class'] });
+    }
+
     function tryWire() {
       if (!mounted || !iframe) return;
       const win = iframe.contentWindow as any;
       try {
         // Inject CSS as early as the iframe document exists, even before
         // Collabora has booted.
-        if (iframe.contentDocument) injectStyle(iframe.contentDocument);
+        if (iframe.contentDocument) {
+          injectStyle(iframe.contentDocument);
+          startObserver(iframe.contentDocument);
+        }
       } catch {}
       const app = win?.app;
       const map = app?.map;
@@ -369,6 +415,8 @@ export function useCollaboraCommands(iframeRef: React.RefObject<HTMLIFrameElemen
       iframe.removeEventListener('load', tryWire);
       if (pollHandle != null) clearInterval(pollHandle);
       if (unsubscribe) unsubscribe();
+      observer?.disconnect();
+      observer = null;
     };
   }, [iframeRef]);
 
