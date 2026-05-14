@@ -175,9 +175,7 @@ export function Toolbar({ commands, active }: ToolbarProps) {
 
         <span className="tb-sep" />
 
-        <Btn title="Insert table" onClick={() => commands.insertTable(3, 3)}>
-          <TableProperties className="w-[18px] h-[18px]" />
-        </Btn>
+        <TablePicker commands={commands} />
         <Btn title="Page break (Ctrl+Enter)" onClick={commands.pageBreak}>
           <Minus className="w-[18px] h-[18px]" />
         </Btn>
@@ -424,6 +422,75 @@ function ColorPick({
               onChange={(e) => onPick(e.target.value)}
               className="w-full h-7 rounded border border-velr-rule cursor-pointer"
             />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─── TablePicker — hover grid to choose rows × cols ──────────────────── */
+function TablePicker({ commands }: { commands: CollaboraCommands }) {
+  const [open, setOpen] = useState(false);
+  const [hover, setHover] = useState<{ r: number; c: number }>({ r: 0, c: 0 });
+  const ref = useRef<HTMLDivElement>(null);
+  const MAX = 10;
+
+  useEffect(() => {
+    if (!open) return;
+    const onClick = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) setOpen(false); };
+    window.addEventListener('mousedown', onClick);
+    return () => window.removeEventListener('mousedown', onClick);
+  }, [open]);
+
+  function pick() {
+    if (hover.r < 1 || hover.c < 1) return;
+    commands.insertTable(hover.r, hover.c);
+    setOpen(false);
+    setHover({ r: 0, c: 0 });
+  }
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        className="tb-btn"
+        title="Insert table"
+        onClick={() => setOpen((o) => !o)}
+      >
+        <TableProperties className="w-[18px] h-[18px]" />
+      </button>
+      {open && (
+        <div className="absolute left-0 top-full mt-1 z-50 bg-white border border-velr-rule rounded-lg shadow-lg p-3">
+          <div
+            className="grid gap-[2px]"
+            style={{ gridTemplateColumns: `repeat(${MAX}, 18px)` }}
+            onMouseLeave={() => setHover({ r: 0, c: 0 })}
+          >
+            {Array.from({ length: MAX * MAX }).map((_, i) => {
+              const r = Math.floor(i / MAX) + 1;
+              const c = (i % MAX) + 1;
+              const active = r <= hover.r && c <= hover.c;
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  className={clsx(
+                    'w-[18px] h-[18px] rounded-sm border transition-colors',
+                    active
+                      ? 'bg-velr-chip border-velr-accent'
+                      : 'bg-white border-velr-rule hover:bg-gray-50',
+                  )}
+                  onMouseEnter={() => setHover({ r, c })}
+                  onClick={pick}
+                />
+              );
+            })}
+          </div>
+          <div className="mt-2 text-center text-[12px] text-velr-subtle">
+            {hover.r > 0
+              ? `${hover.r} × ${hover.c} table`
+              : 'Hover to choose size'}
           </div>
         </div>
       )}

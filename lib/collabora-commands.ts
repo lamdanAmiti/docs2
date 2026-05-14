@@ -509,11 +509,21 @@ export function useCollaboraCommands(iframeRef: React.RefObject<HTMLIFrameElemen
     iframe.addEventListener('load', tryWire);
     tryWire(); // also try immediately in case it's already loaded
 
-    // Forward zoom-keyboard shortcuts (Ctrl+= / Ctrl+- / Ctrl+0) to Collabora
-    // — they fire on the parent doc when focus is in our toolbar/menubar.
+    // Forward keyboard shortcuts that fire while focus is in our toolbar/
+    // menubar (parent window) — they wouldn't otherwise reach Collabora.
+    let direction: 'ltr' | 'rtl' = 'ltr';
     function onKeyDown(ev: KeyboardEvent) {
-      if (!(ev.ctrlKey || ev.metaKey)) return;
+      const mod = ev.ctrlKey || ev.metaKey;
       const cmds = commandsRef.current!;
+      if (!mod) return;
+      // Ctrl+Shift+R → toggle paragraph direction (LTR ↔ RTL)
+      if (ev.shiftKey && (ev.key === 'R' || ev.key === 'r')) {
+        ev.preventDefault();
+        direction = direction === 'ltr' ? 'rtl' : 'ltr';
+        cmds.setDirection(direction);
+        return;
+      }
+      // Zoom
       if (ev.key === '=' || ev.key === '+') { ev.preventDefault(); cmds.zoomIn(); }
       else if (ev.key === '-' || ev.key === '_') { ev.preventDefault(); cmds.zoomOut(); }
       else if (ev.key === '0') { ev.preventDefault(); cmds.zoom(100); }
