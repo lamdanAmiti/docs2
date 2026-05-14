@@ -1,9 +1,10 @@
-# Custom Collabora image:
+# Custom Collabora image for docs.velr.app:
 #   1. Strips all default bundled fonts so only ours appear in the picker.
 #   2. Bakes our custom fonts into /opt/cool/systemplate/ so the chroot-jailed
-#      "kit" rendering processes can actually see them — bind-mounting fonts
-#      into /usr/share/fonts/ at runtime puts them OUTSIDE the jail, which is
-#      why text disappears when those fonts are applied.
+#      "kit" rendering processes can see them.
+#   3. Injects a velr-overrides.css stylesheet into cool.html so the editor
+#      chrome matches the Velr Docs / Tiptap design (color tokens, Inter
+#      font, Google Docs-style toolbar buttons).
 FROM collabora/code:latest
 
 USER root
@@ -22,7 +23,12 @@ COPY public/fonts/english/ /usr/share/fonts/truetype/velr-english/
 COPY public/fonts/hebrew/  /opt/cool/systemplate/usr/share/fonts/truetype/velr-hebrew/
 COPY public/fonts/english/ /opt/cool/systemplate/usr/share/fonts/truetype/velr-english/
 
-# 3. Refresh fontconfig cache so the editor advertises the new set immediately
+# 3. Velr CSS overrides — inject after bundle.css so they cascade-win.
+COPY public/collabora-theme/velr-overrides.css /usr/share/coolwsd/browser/dist/velr-overrides.css
+RUN sed -i 's|<link rel="stylesheet" href="%SERVICE_ROOT%/browser/%VERSION%/bundle.css" />|<link rel="stylesheet" href="%SERVICE_ROOT%/browser/%VERSION%/bundle.css" />\n<link rel="stylesheet" href="%SERVICE_ROOT%/browser/%VERSION%/velr-overrides.css" />|' \
+        /usr/share/coolwsd/browser/dist/cool.html
+
+# 4. Refresh fontconfig cache so the editor advertises the new set immediately
 RUN fc-cache -fv >/dev/null 2>&1 || true
 
 USER cool
