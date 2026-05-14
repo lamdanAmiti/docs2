@@ -15,6 +15,9 @@ services:
       # Same-origin path: editor served from docs.velr.app/{cool,browser,...}.
       # docsapi.velr.app is kept only for the admin console.
       - NEXT_PUBLIC_COLLABORA_URL=https://docs.velr.app
+      # Used by the thumbnail pipeline (server-side POST to convert-to/png).
+      # Internal docker hostname; never exposed to the browser.
+      - COLLABORA_INTERNAL_URL=http://collabora:9980
     # Fonts are bundled in the Docker image via public/fonts/* — Next.js
     # serves them at /fonts/hebrew/* and /fonts/english/*.
     labels:

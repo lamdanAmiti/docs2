@@ -35,21 +35,33 @@ export function DocCard({
         href={`/d/${doc.id}`}
         className="block rounded-lg overflow-hidden border border-velr-rule bg-white hover:border-velr-accent hover:shadow-page transition-all"
       >
-        {/* Paper preview */}
+        {/* Paper preview — real first-page render when available, else placeholder. */}
         <div className="aspect-[8.5/11] bg-velr-paper border-b border-velr-rule relative overflow-hidden">
-          <div className="absolute inset-0 grid place-items-center">
-            <FileText className="w-12 h-12 text-velr-rule" />
-          </div>
-          {/* Subtle "page" lines */}
-          <div className="absolute top-8 left-8 right-8 space-y-2 opacity-40">
-            {Array.from({ length: 10 }).map((_, i) => (
-              <div
-                key={i}
-                className="h-[3px] bg-velr-rule rounded-sm"
-                style={{ width: `${85 - (i % 3) * 15}%` }}
-              />
-            ))}
-          </div>
+          {doc.thumbnail_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={doc.thumbnail_url}
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover object-top"
+              loading="lazy"
+            />
+          ) : (
+            <>
+              <div className="absolute inset-0 grid place-items-center">
+                <FileText className="w-12 h-12 text-velr-rule" />
+              </div>
+              {/* Subtle "page" lines */}
+              <div className="absolute top-8 left-8 right-8 space-y-2 opacity-40">
+                {Array.from({ length: 10 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-[3px] bg-velr-rule rounded-sm"
+                    style={{ width: `${85 - (i % 3) * 15}%` }}
+                  />
+                ))}
+              </div>
+            </>
+          )}
         </div>
 
         {/* Metadata */}

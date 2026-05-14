@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateToken, readDocBytes, writeDocBytes, getLock } from '@/lib/wopi';
 import { db } from '@/lib/supabase';
+import { generateThumbnail } from '@/lib/thumbnails';
 
 /** GET file contents — Collabora downloads the .docx bytes. */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -42,6 +43,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     size_bytes: bytes.length,
     updated_at: new Date().toISOString(),
   }).eq('id', id);
+
+  // Fire-and-forget thumbnail regen. We deliberately don't await — Collabora
+  // sometimes takes a couple of seconds to render the PNG, and the WOPI host
+  // (Collabora itself!) is waiting on this response. The generator catches
+  // its own errors so the unhandled-rejection guard is just defensive.
+  void generateThumbnail(id, bytes).catch(() => {});
 
   return new NextResponse(null, {
     status: 200,

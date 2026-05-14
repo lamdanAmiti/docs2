@@ -1,4 +1,5 @@
 import { db, storage } from './supabase';
+import { signThumbnailUrl } from './thumbnails';
 
 const EMPTY_DOCX_BASE64 =
   // Minimal valid .docx (Word's empty document, ~6.5 KB)
@@ -16,11 +17,15 @@ export interface Doc {
   created_at: string;
   updated_at: string;
   opened_at: string;
+  thumbnail_path: string | null;
+  thumbnail_generated_at: string | null;
 }
 
 export type ListedDoc = Doc & {
   owner: { id: string; display_name: string; avatar_color: string; email: string };
   permission: 'owner' | 'write' | 'read';
+  /** Short-lived signed URL for the first-page thumbnail PNG, or null. */
+  thumbnail_url: string | null;
 };
 
 /**
@@ -41,14 +46,25 @@ export async function listDocsForUser(userId: string): Promise<ListedDoc[]> {
     .select('permission, document:documents(*, owner:users!documents_owner_id_fkey(id, display_name, avatar_color, email))')
     .eq('user_id', userId);
 
-  const ownedDocs: ListedDoc[] = (owned ?? []).map((d: any) => ({ ...d, permission: 'owner' as const }));
-  const sharedDocs: ListedDoc[] = (shared ?? [])
+  const ownedDocs = (owned ?? []).map((d: any) => ({ ...d, permission: 'owner' as const }));
+  const sharedDocs = (shared ?? [])
     .filter((s: any) => s.document)
     .map((s: any) => ({ ...s.document, permission: s.permission as 'read' | 'write' }));
 
-  return [...ownedDocs, ...sharedDocs].sort(
+  const merged = [...ownedDocs, ...sharedDocs].sort(
     (a, b) => new Date(b.opened_at).getTime() - new Date(a.opened_at).getTime(),
   );
+
+  // Attach short-lived signed thumbnail URLs in parallel. signThumbnailUrl
+  // returns null for docs without a generated thumbnail or on storage error
+  // — the UI falls back to the placeholder card.
+  const withThumbs = await Promise.all(
+    merged.map(async (d: any): Promise<ListedDoc> => ({
+      ...d,
+      thumbnail_url: await signThumbnailUrl(d.thumbnail_path ?? null),
+    })),
+  );
+  return withThumbs;
 }
 
 export async function getDocForUser(
