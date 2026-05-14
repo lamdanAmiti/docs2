@@ -517,10 +517,18 @@ export function useCollaboraCommands(iframeRef: React.RefObject<HTMLIFrameElemen
         userOverrodeDirection = true;
         return;
       }
-      // Ctrl+P → Collabora's Print dialog (overrides browser's page print)
+      // Ctrl+P → Collabora's Print flow (overrides browser's page print).
+      // Collabora's actual print pipeline is exposed as `app.map.print()` —
+      // that generates a PDF server-side and triggers the browser print
+      // dialog. The `.uno:Print` UNO is a no-op in browser context.
       if (key === 'p') {
         ev.preventDefault(); ev.stopPropagation();
-        cmds.uno('.uno:Print');
+        const map = (iframe?.contentWindow as any)?.app?.map;
+        if (map?.print) {
+          try { map.print(); return; } catch {}
+        }
+        // Fallback: try the dialog UNOs that Collabora wires up itself.
+        cmds.uno('.uno:PrintDefault');
         return;
       }
       // Zoom — note that '=' is Shift+=
