@@ -35,33 +35,37 @@ export function DocCard({
         href={`/d/${doc.id}`}
         className="block rounded-lg overflow-hidden border border-velr-rule bg-white hover:border-velr-accent hover:shadow-page transition-all"
       >
-        {/* Paper preview — real first-page render when available, else placeholder. */}
-        <div className="aspect-[8.5/11] bg-velr-paper border-b border-velr-rule relative overflow-hidden">
-          {doc.thumbnail_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={doc.thumbnail_url}
-              alt=""
-              className="absolute inset-0 w-full h-full object-cover object-top"
-              loading="lazy"
-            />
-          ) : (
-            <>
-              <div className="absolute inset-0 grid place-items-center">
-                <FileText className="w-12 h-12 text-velr-rule" />
-              </div>
-              {/* Subtle "page" lines */}
-              <div className="absolute top-8 left-8 right-8 space-y-2 opacity-40">
-                {Array.from({ length: 10 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="h-[3px] bg-velr-rule rounded-sm"
-                    style={{ width: `${85 - (i % 3) * 15}%` }}
-                  />
-                ))}
-              </div>
-            </>
-          )}
+        {/* Paper preview — the thumbnail sits inside the card as a floating
+            page (small inset + ring + drop shadow) so it reads as a real
+            document, not a flat poster. */}
+        <div className="aspect-[8.5/11] bg-velr-canvas border-b border-velr-rule relative overflow-hidden p-3">
+          <div className="relative w-full h-full bg-white rounded-sm ring-1 ring-black/[0.06] shadow-[0_2px_6px_rgba(15,23,42,0.08),0_12px_28px_-8px_rgba(15,23,42,0.18)] overflow-hidden">
+            {doc.thumbnail_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={doc.thumbnail_url}
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover object-top"
+                loading="lazy"
+              />
+            ) : (
+              <>
+                <div className="absolute inset-0 grid place-items-center">
+                  <FileText className="w-12 h-12 text-velr-rule" />
+                </div>
+                {/* Subtle "page" lines */}
+                <div className="absolute top-6 left-6 right-6 space-y-2 opacity-40">
+                  {Array.from({ length: 10 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="h-[3px] bg-velr-rule rounded-sm"
+                      style={{ width: `${85 - (i % 3) * 15}%` }}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Metadata */}
