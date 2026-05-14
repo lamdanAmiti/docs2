@@ -230,7 +230,12 @@ function buildCommands(getIframe: () => HTMLIFrameElement | null): CollaboraComm
         FamilyName: { type: 'string', value: 'ParagraphStyles' },
       });
     },
-    setDirection: (dir) => direct(dir === 'rtl' ? '.uno:ParaRightToLeft' : '.uno:ParaLeftToRight'),
+    setDirection: (dir) => {
+      direct(dir === 'rtl' ? '.uno:ParaRightToLeft' : '.uno:ParaLeftToRight');
+      // Mark as user-set so the auto-RTL Hebrew detection doesn't fight it.
+      const w = window as any;
+      w.__velrDirOverride = true;
+    },
     zoom: (pct) => {
       // Collabora's zoom levels are integers; 10 = 100%, ±1 ≈ ±20% step.
       // Mapping derived from Collabora's internal _setNewZoom table:
@@ -475,6 +480,29 @@ export function useCollaboraCommands(iframeRef: React.RefObject<HTMLIFrameElemen
     // (when the user is typing in the doc). preventDefault + stopPropagation
     // beats the browser's own bindings (browser zoom, hard refresh).
     let direction: 'ltr' | 'rtl' = 'ltr';
+    // Auto-RTL on first Hebrew keypress in a paragraph. Resets on Enter
+    // (new paragraph). userOverrodeDirection latches if the user manually
+    // picks a direction in this session — keeps us from fighting them.
+    let userOverrodeDirection = false;
+    let paraDirectionLocked = false;
+    const HEBREW_RE = /[֐-׿יִ-ﭏ]/;
+    function onKeyPress(ev: KeyboardEvent) {
+      // Re-read the override flag from window — setDirection() writes it.
+      userOverrodeDirection = !!(window as any).__velrDirOverride;
+      if (userOverrodeDirection || paraDirectionLocked) {
+        if (ev.key === 'Enter') paraDirectionLocked = false;
+        return;
+      }
+      if (ev.key === 'Enter') { paraDirectionLocked = false; return; }
+      if (ev.key && ev.key.length === 1 && HEBREW_RE.test(ev.key)) {
+        // Direct command (skip setDirection's override flag).
+        const map = (iframe?.contentWindow as any)?.app?.map;
+        if (map?.sendUnoCommand) {
+          try { map.sendUnoCommand('.uno:ParaRightToLeft'); } catch {}
+        }
+        paraDirectionLocked = true;
+      }
+    }
     function onKeyDown(ev: KeyboardEvent) {
       const mod = ev.ctrlKey || ev.metaKey;
       if (!mod) return;
@@ -486,6 +514,13 @@ export function useCollaboraCommands(iframeRef: React.RefObject<HTMLIFrameElemen
         ev.preventDefault(); ev.stopPropagation();
         direction = direction === 'ltr' ? 'rtl' : 'ltr';
         cmds.setDirection(direction);
+        userOverrodeDirection = true;
+        return;
+      }
+      // Ctrl+P → Collabora's Print dialog (overrides browser's page print)
+      if (key === 'p') {
+        ev.preventDefault(); ev.stopPropagation();
+        cmds.uno('.uno:Print');
         return;
       }
       // Zoom — note that '=' is Shift+=
@@ -504,7 +539,9 @@ export function useCollaboraCommands(iframeRef: React.RefObject<HTMLIFrameElemen
       const doc = iframe?.contentDocument;
       if (!doc || doc === docKeyAttached) return;
       docKeyAttached?.removeEventListener('keydown', onKeyDown, true);
+      docKeyAttached?.removeEventListener('keypress', onKeyPress, true);
       doc.addEventListener('keydown', onKeyDown, true);
+      doc.addEventListener('keypress', onKeyPress, true);
       docKeyAttached = doc;
     }
     attachDocListener();
@@ -514,6 +551,7 @@ export function useCollaboraCommands(iframeRef: React.RefObject<HTMLIFrameElemen
       iframe.removeEventListener('load', tryWire);
       window.removeEventListener('keydown', onKeyDown, true);
       docKeyAttached?.removeEventListener('keydown', onKeyDown, true);
+      docKeyAttached?.removeEventListener('keypress', onKeyPress, true);
       if (pollHandle != null) clearInterval(pollHandle);
       if (unsubscribe) unsubscribe();
     };
