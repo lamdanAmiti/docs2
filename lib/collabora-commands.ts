@@ -84,9 +84,13 @@ export interface CollaboraCommands {
   uno: (command: string, args?: Record<string, unknown>) => void;
 }
 
-/* ─── CSS we inject into the iframe to strip Collabora chrome ───────────── */
+/* ─── CSS we inject into the iframe to strip Collabora chrome ─────────────
+   Whitelist approach: hide every body child EXCEPT the map (document
+   canvas) and necessary support elements (dialogs, context menus). Far
+   more reliable than trying to enumerate every chrome class — works even
+   for elements Collabora adds at runtime. */
 const STRIPPED_CHROME_CSS = `
-  /* Hide every chrome surface — only the document canvas should remain. */
+  /* 1. Hide the major chrome surfaces explicitly. */
   #toolbar-wrapper,
   #toolbar-row,
   #toolbar-up,
@@ -94,43 +98,61 @@ const STRIPPED_CHROME_CSS = `
   #toolbar-mobile-back,
   #toolbar-hamburger,
   #toolbar-search,
+  #toolbar-logo,
   #document-titlebar,
   #document-name-input,
   #document-name-input-loading-bar,
-  .document-title-bar,
   #main-menu,
   .main-nav,
-  .menubar,
-  .menubar-shell,
-  #menu-bar-container,
+  .menubar, .menubar-shell,
   .cool-toolbar,
   .notebookbar-shortcuts-bar,
   .notebookbar-tabs-container,
   .notebookbar,
-  #NotebookBar,
   #shortcuts-toolbar,
   #presentation-toolbar,
+  #presentation-controls-wrapper,
   #spreadsheet-toolbar,
-  .w2ui-toolbar,
+  #formulabar, #formulabar-row,
   #tb_editbar,
   #mobile-edit-button,
-  .toolbar-bottom,
-  #welcome-iframe,
-  .welcome-page,
-  .leaflet-control-tabs,
-  .leaflet-control-sidebar,
   #sidebar-dock-wrapper,
-  #sidebar-panel { display: none !important; visibility: hidden !important; }
+  #navigator-dock-wrapper,
+  #quickfind-dock-wrapper,
+  #userListHeader,
+  #userListSummary,
+  #followingChip { display: none !important; }
 
-  /* Let the document canvas fill the iframe */
-  html, body, #map, #document-container, .leaflet-container, .canvas-container {
+  /* 2. Make the document area fill the iframe completely. */
+  html, body {
     margin: 0 !important;
     padding: 0 !important;
     height: 100% !important;
     width: 100% !important;
-    background: var(--velr-canvas, #f8fafe) !important;
+    overflow: hidden !important;
+    background: #f8fafe !important;
   }
-  #map { top: 0 !important; }
+  #main-document-content,
+  #document-container {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
+  }
+  #map, .leaflet-container, .canvas-container {
+    width: 100% !important;
+    height: 100% !important;
+    top: 0 !important;
+    background: #f8fafe !important;
+  }
+
+  /* 3. Keep dialogs / context menus visible (they overlay the doc). */
+  .jsdialog, .lokdialog, .context-menu, #mobile-wizard {
+    z-index: 100000 !important;
+  }
 `;
 
 interface CollaboraGlobals {
