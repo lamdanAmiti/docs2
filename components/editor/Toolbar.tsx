@@ -13,6 +13,12 @@ import { useEffect, useRef, useState } from 'react';
 import { clsx } from 'clsx';
 import { FontPicker } from './FontPicker';
 import type { CollaboraCommands, ActiveState } from '@/lib/collabora-commands';
+import { weightsForPremium } from '@/lib/fonts/premium-fonts';
+
+const WEIGHT_LABEL: Record<number, string> = {
+  100: 'Thin', 200: 'ExtraLight', 300: 'Light', 400: 'Regular',
+  500: 'Medium', 600: 'SemiBold', 700: 'Bold', 800: 'ExtraBold', 900: 'Black',
+};
 
 const FONT_SIZES = [
   '6','7','8','9','10','10.5','11','12','13','14','15','16','18','20','22','24','26','28',
@@ -79,6 +85,11 @@ export function Toolbar({ commands, active }: ToolbarProps) {
         <FontPicker
           currentFont={currentFont}
           onPick={(f) => commands.setFont(f)}
+        />
+
+        <WeightControl
+          currentFont={currentFont}
+          onSet={(w) => commands.setFontWeight(w)}
         />
 
         <FontSizeControl
@@ -556,6 +567,62 @@ function TablePicker({ commands }: { commands: CollaboraCommands }) {
               ? `${hover.r} × ${hover.c} table`
               : 'Hover to choose size'}
           </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─── WeightControl ───────────────────────────────────────────────────────
+   Dropdown that lists the weights available for the current font family.
+   Visible only when the active font is one of the premium English families
+   that ships multiple weights (Söhne, Tiempos, GT America, …). For Google
+   Fonts the weight is requested at link-load time and Collabora already
+   applies it via Bold; surfacing it here too would be noise. */
+function WeightControl({
+  currentFont,
+  onSet,
+}: {
+  currentFont: string;
+  onSet: (weight: number) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onClick = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) setOpen(false); };
+    window.addEventListener('mousedown', onClick);
+    return () => window.removeEventListener('mousedown', onClick);
+  }, [open]);
+
+  const weights = weightsForPremium(currentFont);
+  if (weights.length === 0) return null;
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        className="tb-btn gap-1 px-2 text-xs"
+        onClick={() => setOpen((o) => !o)}
+        title={`Weight (${currentFont})`}
+      >
+        <span className="text-velr-subtle">Wt</span>
+        <ChevronDown className="w-3 h-3 opacity-60" />
+      </button>
+      {open && (
+        <div className="absolute left-0 top-full mt-1 z-50 w-[170px] bg-white border border-velr-rule rounded-lg shadow-lg py-1">
+          {weights.map((w) => (
+            <button
+              key={w}
+              onMouseDown={(e) => { e.preventDefault(); onSet(w); setOpen(false); }}
+              className="w-full flex items-center justify-between gap-3 px-3 py-1.5 text-sm hover:bg-gray-50"
+              style={{ fontFamily: currentFont, fontWeight: w }}
+            >
+              <span>{WEIGHT_LABEL[w] ?? w}</span>
+              <span className="text-[10px] text-velr-subtle">{w}</span>
+            </button>
+          ))}
         </div>
       )}
     </div>

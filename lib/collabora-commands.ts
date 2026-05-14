@@ -77,6 +77,8 @@ export interface CollaboraCommands {
   insertTable: (rows: number, cols: number) => void;
   setFont:     (family: string) => void;
   setFontSize: (pt: number | string) => void;
+  /** Apply a specific CSS-style weight (100..900) to the current selection. */
+  setFontWeight: (weight: number) => void;
   setColor:    (hex: string) => void;
   setHighlight:(hex: string) => void;
   clearFormatting: () => void;
@@ -226,6 +228,13 @@ function buildCommands(getIframe: () => HTMLIFrameElement | null): CollaboraComm
       direct('.uno:CharFontName', { 'CharFontName.FamilyName': { type: 'string', value: family } }),
     setFontSize: (pt) =>
       direct('.uno:FontHeight', { 'FontHeight.Height': { type: 'float', value: Number(pt) } }),
+    setFontWeight: (weight) => {
+      // LibreOffice's UNO CharWeight uses the CSS scale (100..900). For
+      // 400 (Regular) and 700 (Bold) we can also dispatch the dedicated
+      // .uno:Bold toggle, but sending CharWeight directly works for the
+      // intermediate weights too — fontconfig picks the matching face.
+      direct('.uno:CharWeight', { CharWeight: { type: 'float', value: weight } });
+    },
     setColor: (hex) =>
       direct('.uno:Color', { Color: { type: 'long', value: parseInt(hex.replace('#', ''), 16) } }),
     setHighlight: (hex) =>
@@ -472,6 +481,24 @@ export function useCollaboraCommands(iframeRef: React.RefObject<HTMLIFrameElemen
       }
     }
 
+    // Collabora occasionally injects a "Please send us your feedback" banner
+    // at the bottom of the canvas — there's no stable id/class for it across
+    // versions, so we sweep periodically and remove any element whose text
+    // content matches the message. Cheap (runs every 2s, walks ~50 nodes).
+    const FEEDBACK_RE = /please\s+send\s+(us\s+)?(your\s+)?feedback/i;
+    function sweepFeedback() {
+      const doc = iframe?.contentDocument;
+      if (!doc?.body) return;
+      // Only check the floating overlays — Leaflet popups, toasts, dialogs.
+      const candidates = doc.querySelectorAll<HTMLElement>(
+        '.leaflet-popup, .toast, .notification, .vex, .vex-overlay, .modal, .feedback, .feedback-popup, .feedback-banner, [class*="feedback"]'
+      );
+      candidates.forEach((el) => {
+        const t = el.textContent ?? '';
+        if (FEEDBACK_RE.test(t)) el.remove();
+      });
+    }
+
     function tryWire() {
       if (!mounted || !iframe) return;
       const win = iframe.contentWindow as any;
@@ -499,6 +526,8 @@ export function useCollaboraCommands(iframeRef: React.RefObject<HTMLIFrameElemen
 
     iframe.addEventListener('load', tryWire);
     tryWire(); // also try immediately in case it's already loaded
+
+    const sweepHandle = window.setInterval(sweepFeedback, 2000);
 
     // Forward keyboard shortcuts to Collabora — captures in BOTH the parent
     // window (when focus is in our toolbar/menubar) AND the iframe document
@@ -602,6 +631,7 @@ export function useCollaboraCommands(iframeRef: React.RefObject<HTMLIFrameElemen
       docKeyAttached?.removeEventListener('keypress', onKeyPress, true);
       docKeyAttached?.removeEventListener('mousedown', onIframeMouseDown, true);
       if (pollHandle != null) clearInterval(pollHandle);
+      clearInterval(sweepHandle);
       if (unsubscribe) unsubscribe();
     };
   }, [iframeRef]);

@@ -10,6 +10,7 @@ import {
   NON_HEBREW_GOOGLE_FONTS,
   googleFontLinkUrl,
 } from '@/lib/fonts/google-fonts';
+import { PREMIUM_FONTS, type PremiumCategory } from '@/lib/fonts/premium-fonts';
 import { clsx } from 'clsx';
 
 interface Props {
@@ -97,22 +98,35 @@ export function FontPicker({ currentFont, onPick }: Props) {
       .filter((f) => matches(f.family))
       .map((f) => ({ name: f.family, kind: 'google-hebrew' as const, weights: f.weights }));
 
+    // Premium English fonts, grouped by editorial role.
+    const premiumByCat = (cat: PremiumCategory) =>
+      PREMIUM_FONTS
+        .filter((p) => p.category === cat && matches(p.family))
+        .map((p) => ({ name: p.family, kind: 'premium' as const }));
+
+    const premiumTitle    = premiumByCat('title');
+    const premiumSubtitle = premiumByCat('subtitle');
+    const premiumParagraph = premiumByCat('paragraph');
+
     const allOtherGoogle = NON_HEBREW_GOOGLE_FONTS
       .filter((f) => matches(f.family))
       .map((f) => ({ name: f.family, kind: 'google' as const, weights: f.weights }));
 
-    return { recent, localHebrew, hebrewGoogle, allOtherGoogle };
+    return { recent, localHebrew, hebrewGoogle, premiumTitle, premiumSubtitle, premiumParagraph, allOtherGoogle };
   }, [recentFonts, query]);
 
   const visible =
     scriptFilter === 'hebrew'
-      ? { ...sections, allOtherGoogle: [] }
+      ? { ...sections, premiumTitle: [], premiumSubtitle: [], premiumParagraph: [], allOtherGoogle: [] }
       : { ...sections, localHebrew: [], hebrewGoogle: [] };
 
   const totalCount =
     visible.recent.length +
     visible.localHebrew.reduce((acc, g) => acc + g.fonts.length, 0) +
     visible.hebrewGoogle.length +
+    visible.premiumTitle.length +
+    visible.premiumSubtitle.length +
+    visible.premiumParagraph.length +
     visible.allOtherGoogle.length;
 
   const handleSelect = (family: string, kind: string, weights?: number[]) => {
@@ -122,6 +136,9 @@ export function FontPicker({ currentFont, onPick }: Props) {
     // Map the display name to the file's real internal family for local
     // Hebrew fonts (e.g. 'PT Frank' → 'PFT_Frank'). Apply for both
     // 'local-hebrew' AND 'recent' clicks (recents store the display name).
+    // Premium English families already use the clean fontconfig name —
+    // their OTF name tables were rewritten to drop the trial prefix — so
+    // the display label IS the fontconfig family. No remap needed.
     let actualFamily = family;
     if (kind === 'local-hebrew' || kind === 'recent') {
       const entry = HEBREW_FONTS.find((f) => f.name === family);
@@ -223,6 +240,30 @@ export function FontPicker({ currentFont, onPick }: Props) {
               <Group label="Hebrew Google Fonts">
                 {visible.hebrewGoogle.map((f) => (
                   <Row key={`hg:${f.name}`} name={f.name} active={f.name === currentFont} onPick={() => handleSelect(f.name, 'google-hebrew', f.weights)} hint="Google" hebrew />
+                ))}
+              </Group>
+            )}
+
+            {visible.premiumTitle.length > 0 && (
+              <Group label="Title">
+                {visible.premiumTitle.map((f) => (
+                  <Row key={`pt:${f.name}`} name={f.name} active={f.name === currentFont} onPick={() => handleSelect(f.name, 'premium')} hint="Display" />
+                ))}
+              </Group>
+            )}
+
+            {visible.premiumSubtitle.length > 0 && (
+              <Group label="Subtitle">
+                {visible.premiumSubtitle.map((f) => (
+                  <Row key={`ps:${f.name}`} name={f.name} active={f.name === currentFont} onPick={() => handleSelect(f.name, 'premium')} hint="Subhead" />
+                ))}
+              </Group>
+            )}
+
+            {visible.premiumParagraph.length > 0 && (
+              <Group label="Paragraph">
+                {visible.premiumParagraph.map((f) => (
+                  <Row key={`pp:${f.name}`} name={f.name} active={f.name === currentFont} onPick={() => handleSelect(f.name, 'premium')} hint="Body" />
                 ))}
               </Group>
             )}
