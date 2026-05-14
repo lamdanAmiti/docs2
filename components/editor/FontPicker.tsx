@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown, Check, Search } from 'lucide-react';
 import { hebrewFontGroups, HEBREW_FONTS } from '@/lib/fonts/hebrew-fonts';
+import { HEBREW_FONT_FILE_TO_FAMILY } from '@/lib/fonts/hebrew-font-families';
 import {
   GOOGLE_FONTS,
   HEBREW_GOOGLE_FONTS,
@@ -94,7 +95,18 @@ export function FontPicker({ currentFont, onPick }: Props) {
     if (kind === 'google' || kind === 'google-hebrew') {
       ensureGoogleFontLoaded(family, weights);
     }
-    onPick(family);
+    // For local Hebrew fonts: the display name often differs from the
+    // file's internal family name (e.g. "PT Frank" → "PFT_Frank"). Send
+    // the real family name to Collabora; the picker still labels it
+    // by the human-friendly name.
+    let actualFamily = family;
+    if (kind === 'local-hebrew') {
+      const file = HEBREW_FONTS.find((f) => f.name === family)?.file;
+      if (file && HEBREW_FONT_FILE_TO_FAMILY[file]) {
+        actualFamily = HEBREW_FONT_FILE_TO_FAMILY[file];
+      }
+    }
+    onPick(actualFamily);
     pushRecentFont(family);
     setOpen(false);
   };

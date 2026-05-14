@@ -341,7 +341,15 @@ function buildCommands(getIframe: () => HTMLIFrameElement | null): CollaboraComm
         }
       }
     },
-    insertTextBox:         () => direct('.uno:InsertFrameInteract'),
+    insertTextBox: () => {
+      // Insert a default-sized text frame at the caret instead of putting
+      // the user in invisible drag-to-draw mode. Collabora's
+      // .uno:InsertFrame with Cols=1 + size args places a frame they can
+      // then click on directly.
+      direct('.uno:InsertFrame', {
+        Columns: { type: 'long', value: 1 },
+      });
+    },
     insertVerticalTextBox: () => direct('.uno:VerticalTextFrameInteract'),
     uno: (command, args) => direct(command, args),
   };
@@ -390,8 +398,17 @@ export function useCollaboraCommands(iframeRef: React.RefObject<HTMLIFrameElemen
       const next = !wasOpen;
       const doc = iframeRef.current?.contentDocument;
       if (doc?.body) doc.body.classList.toggle('velr-show-sidebar', next);
-      // Ask Collabora to actually populate the sidebar panel on first open.
-      if (next) commandsRef.current?.uno('.uno:Sidebar');
+      // Force-show/hide the sidebar panel directly, bypassing the
+      // MutationObserver and any inline display:none Collabora applied.
+      if (doc) {
+        const sels = ['#sidebar-panel', '.sidebar-panel', '#sidebar-dock-wrapper'];
+        for (const sel of sels) {
+          doc.querySelectorAll<HTMLElement>(sel).forEach((el) => {
+            if (next) el.style.removeProperty('display');
+            else el.style.setProperty('display', 'none', 'important');
+          });
+        }
+      }
       return next;
     });
   }
@@ -492,6 +509,7 @@ export function useCollaboraCommands(iframeRef: React.RefObject<HTMLIFrameElemen
         if (iframe.contentDocument) {
           injectStyle(iframe.contentDocument);
           startObserver(iframe.contentDocument);
+          attachDocListener();
         }
       } catch {}
       const app = win?.app;
@@ -509,31 +527,50 @@ export function useCollaboraCommands(iframeRef: React.RefObject<HTMLIFrameElemen
     iframe.addEventListener('load', tryWire);
     tryWire(); // also try immediately in case it's already loaded
 
-    // Forward keyboard shortcuts that fire while focus is in our toolbar/
-    // menubar (parent window) — they wouldn't otherwise reach Collabora.
+    // Forward keyboard shortcuts to Collabora — captures in BOTH the parent
+    // window (when focus is in our toolbar/menubar) AND the iframe document
+    // (when the user is typing in the doc). preventDefault + stopPropagation
+    // beats the browser's own bindings (browser zoom, hard refresh).
     let direction: 'ltr' | 'rtl' = 'ltr';
     function onKeyDown(ev: KeyboardEvent) {
       const mod = ev.ctrlKey || ev.metaKey;
-      const cmds = commandsRef.current!;
       if (!mod) return;
-      // Ctrl+Shift+R → toggle paragraph direction (LTR ↔ RTL)
-      if (ev.shiftKey && (ev.key === 'R' || ev.key === 'r')) {
-        ev.preventDefault();
+      const cmds = commandsRef.current!;
+      const key = ev.key.toLowerCase();
+
+      // Ctrl+Shift+R → toggle LTR/RTL (kept off the browser's reload shortcut)
+      if (ev.shiftKey && key === 'r') {
+        ev.preventDefault(); ev.stopPropagation();
         direction = direction === 'ltr' ? 'rtl' : 'ltr';
         cmds.setDirection(direction);
         return;
       }
-      // Zoom
-      if (ev.key === '=' || ev.key === '+') { ev.preventDefault(); cmds.zoomIn(); }
-      else if (ev.key === '-' || ev.key === '_') { ev.preventDefault(); cmds.zoomOut(); }
-      else if (ev.key === '0') { ev.preventDefault(); cmds.zoom(100); }
+      // Zoom — note that '=' is Shift+=
+      if (key === '=' || ev.code === 'Equal' || key === '+') {
+        ev.preventDefault(); ev.stopPropagation(); cmds.zoomIn();
+      } else if (key === '-' || ev.code === 'Minus' || key === '_') {
+        ev.preventDefault(); ev.stopPropagation(); cmds.zoomOut();
+      } else if (key === '0') {
+        ev.preventDefault(); ev.stopPropagation(); cmds.zoom(100);
+      }
     }
-    window.addEventListener('keydown', onKeyDown);
+    // Capture phase so we beat the browser's default for Ctrl+Shift+R, etc.
+    window.addEventListener('keydown', onKeyDown, true);
+    let docKeyAttached: Document | null = null;
+    function attachDocListener() {
+      const doc = iframe?.contentDocument;
+      if (!doc || doc === docKeyAttached) return;
+      docKeyAttached?.removeEventListener('keydown', onKeyDown, true);
+      doc.addEventListener('keydown', onKeyDown, true);
+      docKeyAttached = doc;
+    }
+    attachDocListener();
 
     return () => {
       mounted = false;
       iframe.removeEventListener('load', tryWire);
-      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('keydown', onKeyDown, true);
+      docKeyAttached?.removeEventListener('keydown', onKeyDown, true);
       if (pollHandle != null) clearInterval(pollHandle);
       if (unsubscribe) unsubscribe();
       observer?.disconnect();
