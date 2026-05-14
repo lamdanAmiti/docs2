@@ -250,11 +250,31 @@ function buildCommands(getIframe: () => HTMLIFrameElement | null): CollaboraComm
     setFontSize: (pt) =>
       direct('.uno:FontHeight', { 'FontHeight.Height': { type: 'float', value: Number(pt) } }),
     setFontWeight: (weight) => {
-      // LibreOffice's UNO CharWeight uses the CSS scale (100..900). For
-      // 400 (Regular) and 700 (Bold) we can also dispatch the dedicated
-      // .uno:Bold toggle, but sending CharWeight directly works for the
-      // intermediate weights too — fontconfig picks the matching face.
-      direct('.uno:CharWeight', { CharWeight: { type: 'float', value: weight } });
+      // The picker passes the CSS weight (100..900). LibreOffice's
+      // CharWeight property uses awt.FontWeight scale (50..200):
+      //   THIN=50  ULTRALIGHT=60  LIGHT=75  SEMILIGHT=90  NORMAL=100
+      //   SEMIBOLD=110  BOLD=150  ULTRABOLD=175  BLACK=200.
+      const CSS_TO_LO: Record<number, number> = {
+        100: 50, 200: 60, 300: 75, 400: 100, 500: 110,
+        600: 110, 700: 150, 800: 175, 900: 200,
+      };
+      const lo = CSS_TO_LO[weight] ?? 100;
+      // 1) Try the direct property setter via Collabora's editor API.
+      //    This bypasses any UNO dispatch quirks and changes CharWeight on
+      //    the current selection. Works in recent Collabora builds.
+      const map = (getIframe()?.contentWindow as any)?.app?.map;
+      try {
+        const editor = map?._docLayer?._textCsel ?? map?._docLayer;
+        if (editor && typeof editor.setTextAttr === 'function') {
+          editor.setTextAttr('CharWeight', { type: 'float', value: lo });
+          return;
+        }
+      } catch {}
+      // 2) Fallback: send as a UNO dispatch. Parameter name must be
+      //    `CharWeight.Weight` for the slot, not bare `CharWeight`.
+      direct('.uno:CharWeight', {
+        'CharWeight.Weight': { type: 'float', value: lo },
+      });
     },
     setColor: (hex) =>
       direct('.uno:Color', { Color: { type: 'long', value: parseInt(hex.replace('#', ''), 16) } }),
@@ -523,19 +543,37 @@ export function useCollaboraCommands(iframeRef: React.RefObject<HTMLIFrameElemen
         if (FEEDBACK_RE.test(t)) el.remove();
       });
 
-      // (2) selection mini-toolbar
+      // (2) selection mini-toolbar — wide net of selectors and a broad
+      //     detector for any formatting-shaped button inside.
       const formattingPopups = doc.querySelectorAll<HTMLElement>(
-        '.leaflet-popup, .lokdialog, .lokdialog_container, [class*="popup"], [class*="toolbox"], [class*="toolbar"][class*="float"], [class*="context-menu"]'
+        '.leaflet-popup, .lokdialog, .lokdialog_container, ' +
+          '[class*="popup"], [class*="toolbox"], [class*="floating"], ' +
+          '[class*="floatingtoolbar"], [class*="float-toolbar"], ' +
+          '[class*="toolbar"][class*="float"], [class*="context-menu"], ' +
+          '[class*="mini-toolbar"], [class*="MiniToolbar"], ' +
+          '[class*="editor-toolbox"], [class*="selection-toolbar"], ' +
+          '[role="toolbar"]'
       );
+      const FORMAT_RE = /(bold|italic|underline|strike|font|size|color|align|highlight|background|sub.?script|super.?script|list|bullet|number|indent|link)/i;
       formattingPopups.forEach((el) => {
-        // If this overlay contains a Bold OR Italic OR Font button it's
-        // the formatting mini-toolbar — kill it. The top toolbar lives in
-        // the parent document, not the iframe, so we won't kill our own
-        // controls.
-        const hasFormat = el.querySelector(
-          '[title*="Bold" i], [aria-label*="Bold" i], [title*="Italic" i], [aria-label*="Italic" i], [title*="Font" i], [aria-label*="Font" i]'
+        // Skip our own top toolbar — but it lives in the parent doc, so it
+        // doesn't appear in iframe queries. Still, a defensive check.
+        if (!iframe?.contentDocument?.contains(el)) return;
+        // Any button/anchor/select with a format-shaped title or aria-label
+        // means it's the formatting popup.
+        const controls = el.querySelectorAll<HTMLElement>(
+          'button, a, [role="button"], select, [title], [aria-label]'
         );
-        if (hasFormat) el.remove();
+        for (const c of controls) {
+          const label =
+            (c.getAttribute('title') ?? '') +
+            ' ' + (c.getAttribute('aria-label') ?? '') +
+            ' ' + (c.textContent ?? '');
+          if (FORMAT_RE.test(label)) {
+            el.remove();
+            return;
+          }
+        }
       });
     }
 

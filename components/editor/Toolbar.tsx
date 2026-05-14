@@ -13,7 +13,7 @@ import { useEffect, useRef, useState } from 'react';
 import { clsx } from 'clsx';
 import { FontPicker } from './FontPicker';
 import type { CollaboraCommands, ActiveState } from '@/lib/collabora-commands';
-import { weightsForPremium } from '@/lib/fonts/premium-fonts';
+import { findPremiumFamily, dispatchFamilyFor } from '@/lib/fonts/premium-fonts';
 
 const WEIGHT_LABEL: Record<number, string> = {
   100: 'Thin', 200: 'ExtraLight', 300: 'Light', 400: 'Regular',
@@ -89,7 +89,7 @@ export function Toolbar({ commands, active }: ToolbarProps) {
 
         <WeightControl
           currentFont={currentFont}
-          onSet={(w) => commands.setFontWeight(w)}
+          onSet={(fcFamily) => commands.setFont(fcFamily)}
         />
 
         <FontSizeControl
@@ -584,7 +584,8 @@ function WeightControl({
   onSet,
 }: {
   currentFont: string;
-  onSet: (weight: number) => void;
+  /** Receives the CharFontName to dispatch (e.g. 'Söhne Kräftig'). */
+  onSet: (fcFamily: string) => void;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -596,8 +597,13 @@ function WeightControl({
     return () => window.removeEventListener('mousedown', onClick);
   }, [open]);
 
-  const weights = weightsForPremium(currentFont);
-  if (weights.length === 0) return null;
+  // Match currentFont against any premium family OR any of its variants'
+  // fontconfig fullnames — so the chip stays visible once the user has
+  // already picked a specific weight (Söhne Kräftig, Söhne Bold, …).
+  const family = findPremiumFamily(currentFont);
+  if (!family) return null;
+
+  const weights = [...new Set(family.variants.map((v) => v.weight))].sort((a, b) => a - b);
 
   return (
     <div ref={ref} className="relative">
@@ -605,7 +611,7 @@ function WeightControl({
         type="button"
         className="tb-btn gap-1 px-2 text-xs"
         onClick={() => setOpen((o) => !o)}
-        title={`Weight (${currentFont})`}
+        title={`Weight (${family.family})`}
       >
         <span className="text-velr-subtle">Wt</span>
         <ChevronDown className="w-3 h-3 opacity-60" />
@@ -615,9 +621,9 @@ function WeightControl({
           {weights.map((w) => (
             <button
               key={w}
-              onMouseDown={(e) => { e.preventDefault(); onSet(w); setOpen(false); }}
+              onMouseDown={(e) => { e.preventDefault(); onSet(dispatchFamilyFor(family, w)); setOpen(false); }}
               className="w-full flex items-center justify-between gap-3 px-3 py-1.5 text-sm hover:bg-gray-50"
-              style={{ fontFamily: currentFont, fontWeight: w }}
+              style={{ fontFamily: family.family, fontWeight: w }}
             >
               <span>{WEIGHT_LABEL[w] ?? w}</span>
               <span className="text-[10px] text-velr-subtle">{w}</span>
