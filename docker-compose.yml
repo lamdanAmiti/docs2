@@ -42,6 +42,10 @@ services:
       - dictionaries=en_US
       - extra_params=--o:ssl.enable=false --o:ssl.termination=true --o:welcome.enable=false --o:net.proto=IPv4
       - DONT_GEN_SSL_CERT=1
+    volumes:
+      # Hebrew fonts exposed to Collabora's editor font picker.
+      # Drop your .ttf/.otf files into public/fonts/hebrew/ before deploy.
+      - ./public/fonts/hebrew:/usr/share/fonts/truetype/velr-hebrew:ro
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.docsapi.rule=Host(`docsapi.velr.app`)"
