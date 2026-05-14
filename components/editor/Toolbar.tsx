@@ -101,13 +101,21 @@ export function Toolbar({ commands, active }: ToolbarProps) {
         <ColorPick
           value={currentColor}
           title="Text color"
-          icon={<><span className="block w-4 h-3 mb-[1px]" style={{ borderBottom: `3px solid ${currentColor}` }}><Palette className="w-4 h-3 absolute opacity-0" /></span><span className="sr-only">A</span></>}
+          icon={
+            <span className="relative inline-flex flex-col items-center leading-none">
+              <span className="text-[13px] font-semibold text-velr-ink">A</span>
+              <span
+                className="block w-4 h-[3px] rounded-sm mt-[1px]"
+                style={{ background: currentColor || '#000000' }}
+              />
+            </span>
+          }
           onPick={(c) => commands.setColor(c)}
         />
         <ColorPick
           value={currentHighlight}
           title="Highlight color"
-          icon={<Highlighter className="w-[18px] h-[18px]" style={{ color: currentHighlight || '#fff59d' }} />}
+          icon={<Highlighter className="w-[18px] h-[18px] text-velr-ink" />}
           onPick={(c) => commands.setHighlight(c)}
         />
 
@@ -199,19 +207,21 @@ function ZoomControl({ commands }: { commands: CollaboraCommands }) {
   }, [open]);
 
   function applyZoom(pct: number) {
-    const clamped = Math.max(20, Math.min(400, pct));
+    const clamped = Math.max(25, Math.min(200, pct));
     setZoom(clamped);
     commands.zoom(clamped);
   }
 
   function bump(delta: number) {
-    // Use Collabora's native ZoomPlus/ZoomMinus for +/- since they snap
-    // to the same zoom levels Collabora uses internally, keeping our %
-    // display in sync.
-    if (delta > 0) commands.uno('.uno:ZoomPlus');
-    else commands.uno('.uno:ZoomMinus');
-    const step = zoom < 100 ? 10 : 25;
-    setZoom((z) => Math.max(20, Math.min(400, z + delta * step)));
+    if (delta > 0) commands.zoomIn();
+    else commands.zoomOut();
+    // Step through Collabora's zoom table.
+    const steps = [25, 33, 50, 75, 100, 125, 150, 175, 200];
+    setZoom((z) => {
+      const i = steps.indexOf(z);
+      if (i < 0) return z + delta * 25;
+      return steps[Math.max(0, Math.min(steps.length - 1, i + delta))];
+    });
   }
 
   return (

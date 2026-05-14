@@ -83,7 +83,9 @@ export interface CollaboraCommands {
   setHeading: (level: 0 | 1 | 2 | 3 | 4 | 5 | 6) => void;
   setParaStyle: (styleName: string) => void;
   setDirection: (dir: 'ltr' | 'rtl') => void;
-  zoom: (pct: number) => void;
+  zoom:    (pct: number) => void;
+  zoomIn:  () => void;
+  zoomOut: () => void;
   /** Open a file picker and insert the chosen image at the caret. */
   insertImage: () => Promise<void>;
   /** Begin drawing a horizontal text frame (click+drag on canvas). */
@@ -258,27 +260,48 @@ function buildCommands(getIframe: () => HTMLIFrameElement | null): CollaboraComm
     setHighlight: (hex) =>
       direct('.uno:BackColor', { BackColor: { type: 'long', value: parseInt(hex.replace('#', ''), 16) } }),
     clearFormatting: () => direct('.uno:ResetAttributes'),
-    setHeading: (level) =>
-      direct('.uno:ParaStyle', {
-        'Style': { type: 'string', value: level === 0 ? 'Default Paragraph Style' : `Heading ${level}` },
-      }),
-    setParaStyle: (style) =>
-      direct('.uno:ParaStyle', { 'Style': { type: 'string', value: style } }),
+    setHeading: (level) => {
+      const style = level === 0 ? 'Default Paragraph Style' : `Heading ${level}`;
+      const map = (getIframe()?.contentWindow as any)?.app?.map;
+      if (map?.applyStyle) { try { map.applyStyle(style, 'ParagraphStyles'); return; } catch {} }
+      direct('.uno:StyleApply', {
+        Style:      { type: 'string', value: style },
+        FamilyName: { type: 'string', value: 'ParagraphStyles' },
+      });
+    },
+    setParaStyle: (style) => {
+      const map = (getIframe()?.contentWindow as any)?.app?.map;
+      if (map?.applyStyle) { try { map.applyStyle(style, 'ParagraphStyles'); return; } catch {} }
+      direct('.uno:StyleApply', {
+        Style:      { type: 'string', value: style },
+        FamilyName: { type: 'string', value: 'ParagraphStyles' },
+      });
+    },
     setDirection: (dir) => direct(dir === 'rtl' ? '.uno:ParaRightToLeft' : '.uno:ParaLeftToRight'),
     zoom: (pct) => {
-      // Use Collabora's percent-specific UNO commands (don't open dialogs).
-      const exact: Record<number, string> = {
-        50: '.uno:Zoom50', 75: '.uno:Zoom75', 100: '.uno:Zoom100Percent',
-        150: '.uno:Zoom150', 200: '.uno:Zoom200',
+      // Collabora's zoom levels are integers; 10 = 100%, ±1 ≈ ±20% step.
+      // Mapping derived from Collabora's internal _setNewZoom table:
+      //   6→25  7→33  8→50  9→75  10→100  11→125  12→150  13→175  14→200
+      const PCT_TO_LEVEL: Record<number, number> = {
+        25: 6, 33: 7, 50: 8, 75: 9, 90: 9, 100: 10,
+        125: 11, 150: 12, 175: 13, 200: 14,
       };
-      if (exact[pct]) return direct(exact[pct]);
-      // For arbitrary % use the leaflet zoom level directly. Collabora's
-      // zoom index → percentage table:
-      //   8 → 50%, 9 → 75%, 10 → 100%, 11 → 125%, 12 → 150%, etc.
-      const level = Math.round(10 + Math.log2(pct / 100) * 4);
       const map = (getIframe()?.contentWindow as any)?.app?.map;
+      const level = PCT_TO_LEVEL[pct] ?? Math.round(10 + (pct - 100) / 25);
       if (map?.setZoom) { try { map.setZoom(level); return; } catch {} }
-      direct(pct < 100 ? '.uno:ZoomMinus' : '.uno:ZoomPlus');
+      // Fallback: stepwise via uno commands.
+      if (pct >= 100) direct('.uno:ZoomPlus');
+      else direct('.uno:ZoomMinus');
+    },
+    zoomIn:  () => {
+      const map = (getIframe()?.contentWindow as any)?.app?.map;
+      if (map?.zoomIn) { try { map.zoomIn(); return; } catch {} }
+      direct('.uno:ZoomPlus');
+    },
+    zoomOut: () => {
+      const map = (getIframe()?.contentWindow as any)?.app?.map;
+      if (map?.zoomOut) { try { map.zoomOut(); return; } catch {} }
+      direct('.uno:ZoomMinus');
     },
     insertImage: async () => {
       const iframe = getIframe();
@@ -486,9 +509,21 @@ export function useCollaboraCommands(iframeRef: React.RefObject<HTMLIFrameElemen
     iframe.addEventListener('load', tryWire);
     tryWire(); // also try immediately in case it's already loaded
 
+    // Forward zoom-keyboard shortcuts (Ctrl+= / Ctrl+- / Ctrl+0) to Collabora
+    // — they fire on the parent doc when focus is in our toolbar/menubar.
+    function onKeyDown(ev: KeyboardEvent) {
+      if (!(ev.ctrlKey || ev.metaKey)) return;
+      const cmds = commandsRef.current!;
+      if (ev.key === '=' || ev.key === '+') { ev.preventDefault(); cmds.zoomIn(); }
+      else if (ev.key === '-' || ev.key === '_') { ev.preventDefault(); cmds.zoomOut(); }
+      else if (ev.key === '0') { ev.preventDefault(); cmds.zoom(100); }
+    }
+    window.addEventListener('keydown', onKeyDown);
+
     return () => {
       mounted = false;
       iframe.removeEventListener('load', tryWire);
+      window.removeEventListener('keydown', onKeyDown);
       if (pollHandle != null) clearInterval(pollHandle);
       if (unsubscribe) unsubscribe();
       observer?.disconnect();
