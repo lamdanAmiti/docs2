@@ -153,6 +153,8 @@ function buildMenus(commands: CollaboraCommands, active: ActiveState): Menu[] {
         { label: 'Indent — increase', onClick: () => uno('.uno:IncrementIndent') },
         { label: 'Indent — decrease', onClick: () => uno('.uno:DecrementIndent') },
         'sep',
+        { label: 'Drop Cap…',            onClick: () => uno('.uno:FormatDropcap') },
+        'sep',
         { label: 'Page style…',          onClick: () => uno('.uno:PageDialog') },
         { label: 'Columns…',             onClick: () => uno('.uno:FormatColumns') },
         'sep',
