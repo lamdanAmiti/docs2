@@ -152,15 +152,16 @@ const STRIPPED_CHROME_CSS = `
   #feedback-button,
   .feedback-link,
   a[href*="feedback"][href*="collabora"],
-  /* jQuery UI tooltip — Collabora's UIManager.showDocumentTooltip()
-     attaches .tooltip() to .leaflet-layer and uses jQuery UI's widget,
-     which renders an absolutely-positioned .ui-tooltip element. Hides
-     hyperlink-hover tooltips, redline-change tooltips, "Test" font
-     warnings, and the "tooltip kit" Collabora pops near a text
-     selection. Pure tooltip widget — not used for any UI we care about
-     since our top toolbar uses native HTML title attributes. */
+  /* jQuery UI tooltip — showDocumentTooltip() uses jQuery UI's .tooltip()
+     widget which injects .ui-tooltip into the DOM on hover/selection. */
   .ui-tooltip,
-  .ui-helper-hidden-accessible { display: none !important; }
+  .ui-helper-hidden-accessible,
+  /* ContextToolbar — the floating font/size/bold popup that appears on
+     text selection. Collabora's bundle.css has #context-toolbar{display:grid}
+     which wins over .notebookbar{display:none} by ID specificity, so we must
+     also target the ID directly. JS override (below) handles it at the API
+     level so it never renders at all. */
+  #context-toolbar { display: none !important; }
 
   /* Floating selection toolbar: we used to broadly hide .editor-toolbox /
      .w2ui-overlay / .lokdialog_container.modalpopup / .context-toolbar
@@ -580,6 +581,18 @@ export function useCollaboraCommands(iframeRef: React.RefObject<HTMLIFrameElemen
         map.on('commandstatechanged', onStateChanged);
         unsubscribe = () => { try { map.off('commandstatechanged', onStateChanged); } catch {} };
         if (pollHandle != null) { clearInterval(pollHandle); pollHandle = null; }
+
+        // Kill the ContextToolbar at the JS level — the CSS (#context-toolbar
+        // display:none) is the safety net, but patching the API means it
+        // never positions or populates itself at all, even if a future
+        // Collabora version changes the element id/class.
+        try {
+          if (map.contextToolbar) {
+            map.contextToolbar.showContextToolbar = () => {};
+            map.contextToolbar.showContextToolbarImpl = () => {};
+          }
+        } catch {}
+
         return;
       }
       // Not ready yet — poll briefly.
