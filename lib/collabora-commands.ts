@@ -477,6 +477,11 @@ export function useCollaboraCommands(iframeRef: React.RefObject<HTMLIFrameElemen
       }
       if (cmd === 'Undo') setActive((p) => ({ ...p, canUndo: state === 'enabled' }));
       if (cmd === 'Redo') setActive((p) => ({ ...p, canRedo: state === 'enabled' }));
+      // When a frame/text-box is selected the server sends context "Mark objects".
+      // Any other context (or empty string) means we're back in normal text mode.
+      if (cmd === 'Context') {
+        setActive((p) => ({ ...p, frameSelected: rawState === 'Mark objects' }));
+      }
     }
 
     // Some Collabora versions emit paragraph style as 'StyleApply' values
@@ -582,30 +587,13 @@ export function useCollaboraCommands(iframeRef: React.RefObject<HTMLIFrameElemen
       if (map && typeof map.on === 'function' && typeof map.sendUnoCommand === 'function') {
         map.on('commandstatechanged', onStateChanged);
 
-        // Track whether a frame/text-box is the active graphic selection so
-        // the toolbar can show the Frame Properties button contextually.
-        // Collabora fires 'graphicselection' on the map when a frame is
-        // clicked, and 'graphicclear' (or another selection replaces it) when
-        // deselected. The selection object itself lives in
-        // app.map._docLayer.graphicSelection.
-        function onGraphicSel() {
-          const hasSel = !!(win?.app?.map?._docLayer?.graphicSelection?.hasActiveSelection?.());
-          setActive((prev) => ({ ...prev, frameSelected: hasSel }));
-        }
-        function onGraphicClear() {
-          setActive((prev) => ({ ...prev, frameSelected: false }));
-        }
-        try {
-          map.on('graphicselection', onGraphicSel);
-          map.on('graphicclear', onGraphicClear);
-          // Also fire once immediately in case a frame is already selected.
-          onGraphicSel();
-        } catch {}
+        // frameSelected is tracked via commandstatechanged — when a frame/
+        // text-box is selected, Collabora sends context "Mark objects" as
+        // a state change for the ".uno:Context" command (handled in
+        // onStateChanged above). No separate map event needed.
 
         unsubscribe = () => {
           try { map.off('commandstatechanged', onStateChanged); } catch {}
-          try { map.off('graphicselection', onGraphicSel); } catch {}
-          try { map.off('graphicclear', onGraphicClear); } catch {}
         };
         if (pollHandle != null) { clearInterval(pollHandle); pollHandle = null; }
 
