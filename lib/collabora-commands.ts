@@ -44,6 +44,8 @@ export interface ActiveState {
   canRedo?: boolean;
   /** Currently-applied paragraph style name (e.g. "Heading 1") */
   paraStyle?: string;
+  /** True while a text frame / text box is the active graphic selection. */
+  frameSelected?: boolean;
 }
 
 const ALIGN_UNO: Record<'left' | 'center' | 'right' | 'justify', string> = {
@@ -579,7 +581,32 @@ export function useCollaboraCommands(iframeRef: React.RefObject<HTMLIFrameElemen
       const map = app?.map;
       if (map && typeof map.on === 'function' && typeof map.sendUnoCommand === 'function') {
         map.on('commandstatechanged', onStateChanged);
-        unsubscribe = () => { try { map.off('commandstatechanged', onStateChanged); } catch {} };
+
+        // Track whether a frame/text-box is the active graphic selection so
+        // the toolbar can show the Frame Properties button contextually.
+        // Collabora fires 'graphicselection' on the map when a frame is
+        // clicked, and 'graphicclear' (or another selection replaces it) when
+        // deselected. The selection object itself lives in
+        // app.map._docLayer.graphicSelection.
+        function onGraphicSel() {
+          const hasSel = !!(win?.app?.map?._docLayer?.graphicSelection?.hasActiveSelection?.());
+          setActive((prev) => ({ ...prev, frameSelected: hasSel }));
+        }
+        function onGraphicClear() {
+          setActive((prev) => ({ ...prev, frameSelected: false }));
+        }
+        try {
+          map.on('graphicselection', onGraphicSel);
+          map.on('graphicclear', onGraphicClear);
+          // Also fire once immediately in case a frame is already selected.
+          onGraphicSel();
+        } catch {}
+
+        unsubscribe = () => {
+          try { map.off('commandstatechanged', onStateChanged); } catch {}
+          try { map.off('graphicselection', onGraphicSel); } catch {}
+          try { map.off('graphicclear', onGraphicClear); } catch {}
+        };
         if (pollHandle != null) { clearInterval(pollHandle); pollHandle = null; }
 
         // Kill the ContextToolbar at the JS level. contextToolbar is set by

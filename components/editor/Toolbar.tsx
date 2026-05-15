@@ -7,7 +7,7 @@ import {
   Undo2, Redo2, Subscript as SubIcon, Superscript as SupIcon,
   Highlighter, Palette, ChevronDown, ArrowRightLeft,
   IndentIncrease, IndentDecrease, Minus, Eraser,
-  TableProperties, Languages,
+  TableProperties, Languages, Settings2,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { clsx } from 'clsx';
@@ -94,6 +94,19 @@ export function Toolbar({ commands, active }: ToolbarProps) {
         />
 
         <span className="tb-sep" />
+
+        {/* Frame Properties button — visible only when a text box is selected */}
+        {active.frameSelected && (
+          <>
+            <Btn
+              title="Frame Properties (padding, borders, wrap…)"
+              onClick={() => commands.uno('.uno:FrameDialog')}
+            >
+              <Settings2 className="w-[18px] h-[18px]" />
+            </Btn>
+            <span className="tb-sep" />
+          </>
+        )}
 
         <Btn title="Bold (Ctrl+B)" active={!!active.bold} onClick={commands.bold}>
           <Bold className="w-[18px] h-[18px]" />
