@@ -151,34 +151,15 @@ const STRIPPED_CHROME_CSS = `
   #feedback-link,
   #feedback-button,
   .feedback-link,
-  a[href*="feedback"][href*="collabora"],
-  /* Floating selection toolbar — appears when text is selected, contains
-     font/size/bold/etc shortcuts. Naming differs across versions, so we
-     cover everything plausible. We're already exposing all the same
-     controls in the top toolbar, so this is pure duplication on the
-     canvas. */
-  .editor-toolbox,
-  .editor-toolbox-popup,
-  .editor-context-toolbar,
-  .selection-toolbar,
-  .text-selection-toolbar,
-  .cool-mini-toolbar,
-  .mini-toolbar,
-  .floating-toolbar,
-  .lokdialog_container.modalpopup,
-  .lokdialog-floating,
-  .context-toolbar,
-  #copy-paste-container,
-  #format-popup,
-  #formattingpopupmenu,
-  .action-button-bubble,
-  .selection-popup,
-  /* w2ui overlays — Collabora uses these for tooltips AND for the floating
-     selection mini-toolbar. Hiding the overlay container kills both. The
-     real top-toolbar tooltips come from native HTML `title` attributes, not
-     from w2ui, so this is safe. */
-  .w2ui-tooltip,
-  .w2ui-overlay { display: none !important; }
+  a[href*="feedback"][href*="collabora"] { display: none !important; }
+
+  /* Floating selection toolbar / tooltips: we used to broadly hide
+     .editor-toolbox / .w2ui-overlay / .lokdialog_container.modalpopup /
+     .context-toolbar here, but those wrap LEGITIMATE frame controls too —
+     killing them blocks the user from selecting and reshaping text boxes.
+     Removal is now exclusively driven by the runtime sweep in this hook
+     (sweepFeedback), which only removes a popup if it contains BOTH a
+     Bold AND a Font control. Frame controls don't pass that test. */
 
   /* Sidebar reveal on demand */
   body.velr-show-sidebar #sidebar-panel,
