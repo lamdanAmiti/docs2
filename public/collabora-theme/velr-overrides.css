@@ -100,7 +100,12 @@ body {
 #toolbar-down,
 .notebookbar,
 #shortcuts-toolbar,
-#document-name-input-loading-bar { display: none !important; }
+#document-name-input-loading-bar,
+/* ContextToolbar — floating font/size/bold popup shown on text selection.
+   bundle.css has #context-toolbar{display:grid} which beats .notebookbar
+   by ID specificity. Must target the ID here so it wins at page-load time,
+   before JS injection runs. */
+#context-toolbar { display: none !important; }
 
 /* DO NOT override top/height on #document-container, #map, .leaflet-container
    or .canvas-container. Leaflet's selection overlay (graphic resize handles,

@@ -582,16 +582,24 @@ export function useCollaboraCommands(iframeRef: React.RefObject<HTMLIFrameElemen
         unsubscribe = () => { try { map.off('commandstatechanged', onStateChanged); } catch {} };
         if (pollHandle != null) { clearInterval(pollHandle); pollHandle = null; }
 
-        // Kill the ContextToolbar at the JS level — the CSS (#context-toolbar
-        // display:none) is the safety net, but patching the API means it
-        // never positions or populates itself at all, even if a future
-        // Collabora version changes the element id/class.
-        try {
-          if (map.contextToolbar) {
-            map.contextToolbar.showContextToolbar = () => {};
-            map.contextToolbar.showContextToolbarImpl = () => {};
-          }
-        } catch {}
+        // Kill the ContextToolbar at the JS level. contextToolbar is set by
+        // UIManager.initializeComponents which runs AFTER map is ready, so
+        // we poll until it exists rather than checking once.
+        (function patchContextToolbar() {
+          try {
+            const win2 = iframe?.contentWindow as any;
+            const ct = win2?.app?.map?.contextToolbar;
+            if (ct) {
+              ct.showContextToolbar = () => {};
+              ct.showContextToolbarImpl = () => {};
+              ct.showHideToolbar = () => {};
+              return; // done
+            }
+          } catch {}
+          // Not ready yet — check again in 200 ms (stops naturally when
+          // the outer hook unmounts because the iframe is gone).
+          if (mounted) setTimeout(patchContextToolbar, 200);
+        })();
 
         return;
       }
