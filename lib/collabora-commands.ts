@@ -151,15 +151,24 @@ const STRIPPED_CHROME_CSS = `
   #feedback-link,
   #feedback-button,
   .feedback-link,
-  a[href*="feedback"][href*="collabora"] { display: none !important; }
+  a[href*="feedback"][href*="collabora"],
+  /* jQuery UI tooltip — Collabora's UIManager.showDocumentTooltip()
+     attaches .tooltip() to .leaflet-layer and uses jQuery UI's widget,
+     which renders an absolutely-positioned .ui-tooltip element. Hides
+     hyperlink-hover tooltips, redline-change tooltips, "Test" font
+     warnings, and the "tooltip kit" Collabora pops near a text
+     selection. Pure tooltip widget — not used for any UI we care about
+     since our top toolbar uses native HTML title attributes. */
+  .ui-tooltip,
+  .ui-helper-hidden-accessible { display: none !important; }
 
-  /* Floating selection toolbar / tooltips: we used to broadly hide
-     .editor-toolbox / .w2ui-overlay / .lokdialog_container.modalpopup /
-     .context-toolbar here, but those wrap LEGITIMATE frame controls too —
-     killing them blocks the user from selecting and reshaping text boxes.
-     Removal is now exclusively driven by the runtime sweep in this hook
-     (sweepFeedback), which only removes a popup if it contains BOTH a
-     Bold AND a Font control. Frame controls don't pass that test. */
+  /* Floating selection toolbar: we used to broadly hide .editor-toolbox /
+     .w2ui-overlay / .lokdialog_container.modalpopup / .context-toolbar
+     here, but those wrap LEGITIMATE frame controls too — killing them
+     blocks the user from selecting and reshaping text boxes. Removal is
+     now exclusively driven by the runtime sweep (sweepFeedback), which
+     only removes a popup if it contains BOTH a Bold AND a Font control.
+     Frame controls don't pass that test. */
 
   /* Sidebar reveal on demand */
   body.velr-show-sidebar #sidebar-panel,

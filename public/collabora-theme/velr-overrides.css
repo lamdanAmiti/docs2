@@ -102,14 +102,14 @@ body {
 #shortcuts-toolbar,
 #document-name-input-loading-bar { display: none !important; }
 
-/* Pull the canvas to fill the iframe since we hid the chrome */
-.canvas-container,
-#document-container,
-.leaflet-container,
-#map {
-  top: 0 !important;
-  height: 100vh !important;
-}
+/* DO NOT override top/height on #document-container, #map, .leaflet-container
+   or .canvas-container. Leaflet's selection overlay (graphic resize handles,
+   text-box drag grips) computes its coordinates relative to those elements'
+   client rectangles. Forcing top:0 / height:100vh shifts the reference frame
+   so the handles render off-screen and clicks on a text box never hit any
+   handle, making frames look unselectable. Hiding the toolbar via display:none
+   above already compresses the flex layout — the canvas fills the space
+   naturally. */
 
 /* ─── 3. Hide everything Collabora-branded ─────────────────────────────── */
 .toolbar-bg-logo,
