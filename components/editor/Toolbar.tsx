@@ -74,10 +74,6 @@ export function Toolbar({ commands, active }: ToolbarProps) {
 
         <span className="tb-sep" />
 
-        <ZoomControl commands={commands} />
-
-        <span className="tb-sep" />
-
         <BlockTypeSelect commands={commands} current={active.paraStyle} />
 
         <span className="tb-sep" />
